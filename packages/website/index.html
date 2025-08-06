@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIGHT - AI Configuration Assistant for Home Assistant</title>
+  <meta name="description" content="Transform your Home Assistant with AI-powered natural language configuration generation. Create automations, scripts, and dashboards by simply describing what you want.">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="/src/styles/main.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav id="navbar" class="navbar">
+    <div class="nav-container">
+      <div class="nav-logo">
+        <div class="logo-shape">
+          <span class="logo-text">AIGHT</span>
+        </div>
+      </div>
+      <div class="nav-menu">
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#how-it-works" class="nav-link">How It Works</a>
+        <a href="#installation" class="nav-link">Installation</a>
+        <a href="#examples" class="nav-link">Examples</a>
+        <a href="https://github.com/toml0006/aight" target="_blank" class="nav-link nav-github">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+      </div>
+      <button class="nav-toggle" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section id="hero" class="hero">
+    <div class="hero-bg">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+      <div class="shape shape-4"></div>
+      <div class="shape shape-5"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="badge-text">NEW</span>
+        <span class="badge-description">v1.0.0 Released!</span>
+      </div>
+      <h1 class="hero-title">
+        <span class="title-line">Configure</span>
+        <span class="title-line title-accent">Home Assistant</span>
+        <span class="title-line">with Natural Language</span>
+      </h1>
+      <p class="hero-description">
+        Transform complex YAML configurations into simple conversations. 
+        AIGHT uses AI to generate automations, scripts, and dashboards 
+        just by describing what you want.
+      </p>
+      <div class="hero-actions">
+        <a href="#installation" class="btn btn-primary">
+          <span>Get Started</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14m-7-7l7 7-7 7"/>
+          </svg>
+        </a>
+        <a href="#examples" class="btn btn-secondary">
+          <span>See Examples</span>
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-value">6+</span>
+          <span class="stat-label">LLM Providers</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">7</span>
+          <span class="stat-label">Config Types</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">100%</span>
+          <span class="stat-label">HACS Ready</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="features">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="title-accent">Features</span>
+          <span class="title-decoration"></span>
+        </h2>
+        <p class="section-description">
+          Everything you need to revolutionize your Home Assistant configuration workflow
+        </p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <div class="icon-shape icon-1">
+              <span>🤖</span>
+            </div>
+          </div>
+          <h3 class="feature-title">Natural Language</h3>
+          <p class="feature-description">
+            Describe what you want in plain English. No more wrestling with YAML syntax.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <div class="icon-shape icon-2">
+              <span>👁️</span>
+            </div>
+          </div>
+          <h3 class="feature-title">Live Preview</h3>
+          <p class="feature-description">
+            See your configuration with real entity data before deploying to production.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <div class="icon-shape icon-3">
+              <span>🎯</span>
+            </div>
+          </div>
+          <h3 class="feature-title">Smart Autocomplete</h3>
+          <p class="feature-description">
+            Intelligent entity suggestions based on your devices and areas.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <div class="icon-shape icon-4">
+              <span>🔄</span>
+            </div>
+          </div>
+          <h3 class="feature-title">Multi-LLM Support</h3>
+          <p class="feature-description">
+            Choose from OpenAI, Anthropic, Google, and more AI providers.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <div class="icon-shape icon-5">
+              <span>✅</span>
+            </div>
+          </div>
+          <h3 class="feature-title">Validation</h3>
+          <p class="feature-description">
+            Built-in validation catches errors before they reach your system.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <div class="icon-shape icon-6">
+              <span>🎨</span>
+            </div>
+          </div>
+          <h3 class="feature-title">Modern UI</h3>
+          <p class="feature-description">
+            Beautiful interface that follows Home Assistant design standards.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section id="how-it-works" class="how-it-works">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="title-accent">How It Works</span>
+          <span class="title-decoration"></span>
+        </h2>
+      </div>
+      <div class="steps-container">
+        <div class="step">
+          <div class="step-number">
+            <span>1</span>
+          </div>
+          <div class="step-content">
+            <h3 class="step-title">Describe</h3>
+            <p class="step-description">
+              Type what you want in natural language
+            </p>
+            <div class="step-example">
+              <code>"Turn on living room lights when motion is detected after sunset"</code>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">
+            <span>2</span>
+          </div>
+          <div class="step-content">
+            <h3 class="step-title">Generate</h3>
+            <p class="step-description">
+              AI creates valid YAML configuration
+            </p>
+            <div class="step-example">
+              <pre><code>alias: Motion Light Control
+trigger:
+  - platform: state
+    entity_id: binary_sensor.motion
+    to: "on"</code></pre>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">
+            <span>3</span>
+          </div>
+          <div class="step-content">
+            <h3 class="step-title">Preview</h3>
+            <p class="step-description">
+              See live preview with your entities
+            </p>
+            <div class="step-example">
+              <div class="preview-box">
+                <div class="preview-item">✅ Motion sensor: Active</div>
+                <div class="preview-item">💡 Living room light: Ready</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">
+            <span>4</span>
+          </div>
+          <div class="step-content">
+            <h3 class="step-title">Deploy</h3>
+            <p class="step-description">
+              Copy or save to Home Assistant
+            </p>
+            <div class="step-example">
+              <button class="demo-button">Copy Configuration</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Installation Section -->
+  <section id="installation" class="installation">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="title-accent">Installation</span>
+          <span class="title-decoration"></span>
+        </h2>
+      </div>
+      <div class="install-methods">
+        <div class="install-card install-hacs">
+          <div class="install-header">
+            <h3 class="install-title">Install via HACS</h3>
+            <span class="install-badge">Recommended</span>
+          </div>
+          <ol class="install-steps">
+            <li>Open HACS in Home Assistant</li>
+            <li>Go to "Integrations"</li>
+            <li>Click "..." → "Custom repositories"</li>
+            <li>Add: <code>https://github.com/toml0006/aight</code></li>
+            <li>Category: Integration</li>
+            <li>Search "AI Configuration Assistant"</li>
+            <li>Click Download & Restart</li>
+          </ol>
+          <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=toml0006&repository=aight&category=integration" 
+             target="_blank" 
+             class="install-button">
+            <img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Open in HACS">
+          </a>
+        </div>
+        <div class="install-card install-manual">
+          <div class="install-header">
+            <h3 class="install-title">Manual Installation</h3>
+          </div>
+          <ol class="install-steps">
+            <li>Download the latest release</li>
+            <li>Copy to custom_components/</li>
+            <li>Restart Home Assistant</li>
+            <li>Add integration in Settings</li>
+          </ol>
+          <a href="https://github.com/toml0006/aight/releases" 
+             target="_blank" 
+             class="btn btn-secondary">
+            Download Latest Release
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Examples Section -->
+  <section id="examples" class="examples">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="title-accent">Examples</span>
+          <span class="title-decoration"></span>
+        </h2>
+      </div>
+      <div class="examples-tabs">
+        <button class="tab-button active" data-tab="automations">Automations</button>
+        <button class="tab-button" data-tab="scripts">Scripts</button>
+        <button class="tab-button" data-tab="dashboards">Dashboards</button>
+      </div>
+      <div class="examples-content">
+        <div class="tab-content active" id="automations">
+          <div class="example-card">
+            <div class="example-prompt">
+              <span class="prompt-label">You type:</span>
+              <p>"Turn on living room lights when motion is detected after sunset"</p>
+            </div>
+            <div class="example-result">
+              <span class="result-label">AIGHT generates:</span>
+              <pre><code>alias: Living Room Motion Lights
+trigger:
+  - platform: state
+    entity_id: binary_sensor.living_room_motion
+    to: "on"
+condition:
+  - condition: sun
+    after: sunset
+action:
+  - service: light.turn_on
+    target:
+      entity_id: light.living_room</code></pre>
+            </div>
+          </div>
+        </div>
+        <div class="tab-content" id="scripts">
+          <div class="example-card">
+            <div class="example-prompt">
+              <span class="prompt-label">You type:</span>
+              <p>"Good night routine: turn off all lights and lock doors"</p>
+            </div>
+            <div class="example-result">
+              <span class="result-label">AIGHT generates:</span>
+              <pre><code>alias: Good Night Routine
+sequence:
+  - service: light.turn_off
+    target:
+      entity_id: all
+  - service: lock.lock
+    target:
+      entity_id: 
+        - lock.front_door
+        - lock.back_door</code></pre>
+            </div>
+          </div>
+        </div>
+        <div class="tab-content" id="dashboards">
+          <div class="example-card">
+            <div class="example-prompt">
+              <span class="prompt-label">You type:</span>
+              <p>"Create a security dashboard with cameras and door sensors"</p>
+            </div>
+            <div class="example-result">
+              <span class="result-label">AIGHT generates:</span>
+              <pre><code>type: vertical-stack
+cards:
+  - type: picture-entity
+    entity: camera.front_door
+    name: Front Door
+  - type: entities
+    entities:
+      - binary_sensor.front_door
+      - binary_sensor.back_door</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Providers Section -->
+  <section id="providers" class="providers">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="title-accent">AI Providers</span>
+          <span class="title-decoration"></span>
+        </h2>
+        <p class="section-description">Choose your preferred AI provider</p>
+      </div>
+      <div class="providers-grid">
+        <div class="provider-card">
+          <div class="provider-logo">OpenAI</div>
+          <div class="provider-models">GPT-4, GPT-3.5</div>
+        </div>
+        <div class="provider-card">
+          <div class="provider-logo">Anthropic</div>
+          <div class="provider-models">Claude 3</div>
+        </div>
+        <div class="provider-card">
+          <div class="provider-logo">Google</div>
+          <div class="provider-models">Gemini Pro</div>
+        </div>
+        <div class="provider-card">
+          <div class="provider-logo">Mistral</div>
+          <div class="provider-models">Large, Medium</div>
+        </div>
+        <div class="provider-card">
+          <div class="provider-logo">Groq</div>
+          <div class="provider-models">Llama3 70B</div>
+        </div>
+        <div class="provider-card">
+          <div class="provider-logo">Ollama</div>
+          <div class="provider-models">Local Models</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section id="cta" class="cta">
+    <div class="cta-bg">
+      <div class="cta-shape-1"></div>
+      <div class="cta-shape-2"></div>
+    </div>
+    <div class="container">
+      <div class="cta-content">
+        <h2 class="cta-title">Ready to Transform Your Home Assistant?</h2>
+        <p class="cta-description">
+          Join the revolution. Configure your smart home with the power of AI.
+        </p>
+        <div class="cta-actions">
+          <a href="#installation" class="btn btn-primary btn-large">
+            Install Now
+          </a>
+          <a href="https://github.com/toml0006/aight" target="_blank" class="btn btn-secondary btn-large">
+            View on GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <div class="footer-logo">AIGHT</div>
+          <p class="footer-tagline">AI Configuration Assistant for Home Assistant</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-column">
+            <h4>Product</h4>
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How It Works</a>
+            <a href="#examples">Examples</a>
+          </div>
+          <div class="footer-column">
+            <h4>Resources</h4>
+            <a href="https://github.com/toml0006/aight" target="_blank">GitHub</a>
+            <a href="https://github.com/toml0006/aight/issues" target="_blank">Support</a>
+            <a href="https://github.com/toml0006/aight/releases" target="_blank">Releases</a>
+          </div>
+          <div class="footer-column">
+            <h4>Community</h4>
+            <a href="https://community.home-assistant.io/" target="_blank">HA Forum</a>
+            <a href="https://github.com/toml0006/aight/discussions" target="_blank">Discussions</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 AIGHT. MIT License.</p>
+        <p>Made with ❤️ for the Home Assistant community</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

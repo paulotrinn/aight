@@ -1,0 +1,23 @@
+{
+  "name": "aight-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI Configuration Assistant for Home Assistant - Monorepo",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=website",
+    "build": "npm run build --workspace=website",
+    "preview": "npm run preview --workspace=website",
+    "deploy": "npm run deploy --workspace=website"
+  },
+  "keywords": [
+    "home-assistant",
+    "ai",
+    "automation",
+    "smart-home"
+  ],
+  "author": "toml0006",
+  "license": "MIT"
+}

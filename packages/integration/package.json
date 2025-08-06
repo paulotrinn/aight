@@ -1,0 +1,12 @@
+{
+  "name": "@aight/integration",
+  "version": "1.0.0",
+  "description": "AI Configuration Assistant - Home Assistant Integration",
+  "private": true,
+  "files": [
+    "custom_components",
+    "www",
+    "hacs.json",
+    "info.md"
+  ]
+}
