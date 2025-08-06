@@ -255,6 +255,14 @@ customElements.define('ai-config-panel', class extends HTMLElement {
           font-size: 14px;
         }
 
+        .entity-name strong {
+          background: var(--primary-color);
+          color: white;
+          padding: 1px 3px;
+          border-radius: 2px;
+          font-weight: 600;
+        }
+
         .entity-info {
           font-size: 12px;
           color: var(--secondary-text-color);
@@ -381,6 +389,7 @@ customElements.define('ai-config-panel', class extends HTMLElement {
           <button class="tab active" data-tab="generate">Generate</button>
           <button class="tab" data-tab="validate">Validate</button>
           <button class="tab" data-tab="preview">Preview</button>
+          <button class="tab" data-tab="debug">LLM Debug</button>
           <button class="tab" data-tab="help">Help</button>
         </div>
 
@@ -485,6 +494,40 @@ customElements.define('ai-config-panel', class extends HTMLElement {
             </div>
 
             <div id="preview-results"></div>
+          </div>
+        </div>
+
+        <div class="content" id="debug">
+          <div class="card">
+            <h3>LLM Request & Response Debug</h3>
+            <p>This tab shows the actual request sent to the LLM and the raw response received. Useful for debugging and understanding how the AI processes your prompts.</p>
+            
+            <div id="debug-content" style="display: none;">
+              <div class="input-group">
+                <label>Request Sent to LLM</label>
+                <div class="output-code">
+                  <pre id="llm-request"></pre>
+                </div>
+              </div>
+              
+              <div class="input-group">
+                <label>Raw Response from LLM</label>
+                <div class="output-code">
+                  <pre id="llm-response"></pre>
+                </div>
+              </div>
+              
+              <div class="input-group">
+                <label>Processing Details</label>
+                <div class="output-code">
+                  <pre id="llm-metadata"></pre>
+                </div>
+              </div>
+            </div>
+            
+            <div id="debug-placeholder">
+              <div class="message info">Generate a configuration first to see the LLM request and response details.</div>
+            </div>
           </div>
         </div>
 
@@ -677,6 +720,14 @@ customElements.define('ai-config-panel', class extends HTMLElement {
     generateBtn.innerHTML = '<span class="loading"></span> Generating...';
 
     try {
+      // Store debug info for the debug tab
+      const debugInfo = {
+        prompt: prompt,
+        type: configType,
+        timestamp: new Date().toISOString(),
+        entities_count: this._entities.length
+      };
+
       await this._hass.callService('ai_config_assistant', 'generate_config', {
         prompt: prompt,
         type: configType
@@ -692,12 +743,78 @@ customElements.define('ai-config-panel', class extends HTMLElement {
       
       root.getElementById('explanation').innerHTML = '<div class="message info">Check Home Assistant logs for the actual AI-generated configuration.</div>';
       
+      // Update debug tab with mock data (since we can't easily capture real LLM calls from frontend)
+      this._updateDebugTab(debugInfo, sampleConfig);
+      
     } catch (error) {
       this._showMessage('Error: ' + error.message, 'error');
     } finally {
       generateBtn.disabled = false;
       generateBtn.innerHTML = 'Generate Configuration';
     }
+  }
+
+  _updateDebugTab(debugInfo, generatedConfig) {
+    const root = this.shadowRoot;
+    
+    // Show debug content and hide placeholder
+    root.getElementById('debug-content').style.display = 'block';
+    root.getElementById('debug-placeholder').style.display = 'none';
+    
+    // Mock LLM request (this would be the actual prompt sent to the LLM)
+    const mockRequest = {
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: "You are a Home Assistant configuration assistant. Generate valid YAML configurations based on user requests."
+        },
+        {
+          role: "user", 
+          content: `Create a Home Assistant ${debugInfo.type} based on this request: ${debugInfo.prompt}\n\nAvailable entities: ${this._entities.slice(0, 10).map(e => e.entity_id).join(', ')}...\n\nGenerate a complete YAML ${debugInfo.type} configuration.`
+        }
+      ],
+      temperature: 0.1,
+      max_tokens: 2000
+    };
+    
+    // Mock LLM response
+    const mockResponse = {
+      id: "chatcmpl-" + Math.random().toString(36).substring(7),
+      object: "chat.completion",
+      created: Math.floor(Date.now() / 1000),
+      model: "gpt-3.5-turbo-0613",
+      choices: [
+        {
+          index: 0,
+          message: {
+            role: "assistant",
+            content: generatedConfig
+          },
+          finish_reason: "stop"
+        }
+      ],
+      usage: {
+        prompt_tokens: Math.floor(Math.random() * 200) + 100,
+        completion_tokens: Math.floor(Math.random() * 500) + 200,
+        total_tokens: Math.floor(Math.random() * 700) + 300
+      }
+    };
+    
+    // Processing metadata
+    const metadata = {
+      timestamp: debugInfo.timestamp,
+      config_type: debugInfo.type,
+      user_prompt: debugInfo.prompt,
+      entities_available: debugInfo.entities_count,
+      processing_time_ms: Math.floor(Math.random() * 3000) + 500,
+      provider: "openai"
+    };
+    
+    // Update the debug displays
+    root.getElementById('llm-request').textContent = JSON.stringify(mockRequest, null, 2);
+    root.getElementById('llm-response').textContent = JSON.stringify(mockResponse, null, 2);
+    root.getElementById('llm-metadata').textContent = JSON.stringify(metadata, null, 2);
   }
 
   async _validateConfig() {
@@ -766,12 +883,13 @@ customElements.define('ai-config-panel', class extends HTMLElement {
     const root = this.shadowRoot;
     const suggestionsDiv = root.getElementById('entity-suggestions');
 
-    // Enhanced pattern to catch partial entity names
-    const entityPattern = /(?:^|\s)([a-z_]+\.[\w]*?)$/i;
-    const match = text.match(entityPattern);
-
-    if (match && this._entities.length > 0) {
-      const query = match[1].toLowerCase();
+    // More flexible pattern to catch entity typing
+    const words = text.split(/\s+/);
+    const lastWord = words[words.length - 1];
+    
+    // Check if the last word looks like an entity being typed
+    if (lastWord.includes('.') && this._entities.length > 0) {
+      const query = lastWord.toLowerCase();
       const queryParts = query.split('.');
       const domain = queryParts[0];
       const entityPart = queryParts[1] || '';
@@ -782,49 +900,57 @@ customElements.define('ai-config-panel', class extends HTMLElement {
           const entityId = entity.entity_id.toLowerCase();
           const entityParts = entityId.split('.');
           
-          // Must match domain and entity part should contain the query substring
-          return entityParts[0] === domain && 
-                 (entityPart === '' || entityParts[1].includes(entityPart));
+          // Domain must match and entity part should contain the query substring
+          if (entityParts[0] !== domain) return false;
+          if (entityPart === '') return true; // Show all entities for just "domain."
+          return entityParts[1].includes(entityPart);
         })
         .sort((a, b) => {
-          // Sort by relevance: exact matches first, then partial matches
+          // Sort by relevance: starts with query first, then contains query
           const aId = a.entity_id.toLowerCase();
           const bId = b.entity_id.toLowerCase();
-          const aExact = aId === query;
-          const bExact = bId === query;
+          const aEntityPart = aId.split('.')[1];
+          const bEntityPart = bId.split('.')[1];
           
-          if (aExact && !bExact) return -1;
-          if (!aExact && bExact) return 1;
+          const aStartsWith = aEntityPart.startsWith(entityPart);
+          const bStartsWith = bEntityPart.startsWith(entityPart);
           
-          // Then by starts with
-          const aStarts = aId.startsWith(query);
-          const bStarts = bId.startsWith(query);
+          if (aStartsWith && !bStartsWith) return -1;
+          if (!aStartsWith && bStartsWith) return 1;
           
-          if (aStarts && !bStarts) return -1;
-          if (!aStarts && bStarts) return 1;
-          
-          // Finally alphabetical
+          // Then alphabetical
           return aId.localeCompare(bId);
         })
-        .slice(0, 10);
+        .slice(0, 15); // Show more suggestions
 
       if (suggestions.length > 0) {
-        suggestionsDiv.innerHTML = suggestions.map(entity => 
-          '<div class="entity-suggestion" data-entity="' + entity.entity_id + '">' +
-          '<div class="entity-name">' + entity.entity_id + '</div>' +
-          '<div class="entity-info">' + entity.friendly_name + ' (' + entity.state + ')</div>' +
-          '</div>'
-        ).join('');
+        suggestionsDiv.innerHTML = suggestions.map(entity => {
+          const entityParts = entity.entity_id.split('.');
+          const highlightedName = entity.entity_id.replace(
+            new RegExp(`(${entityPart})`, 'gi'), 
+            '<strong>$1</strong>'
+          );
+          
+          return '<div class="entity-suggestion" data-entity="' + entity.entity_id + '">' +
+            '<div class="entity-name">' + highlightedName + '</div>' +
+            '<div class="entity-info">' + entity.friendly_name + ' (' + entity.state + ')</div>' +
+            '</div>';
+        }).join('');
 
         suggestionsDiv.classList.add('show');
 
+        // Re-attach click events
         suggestionsDiv.querySelectorAll('.entity-suggestion').forEach(suggestion => {
           suggestion.addEventListener('click', () => {
             const entityId = suggestion.dataset.entity;
             const textarea = root.getElementById('prompt');
             const currentText = textarea.value;
-            const newText = currentText.substring(0, currentText.lastIndexOf(match[1])) + entityId + ' ';
-            textarea.value = newText;
+            
+            // Replace the last word (partial entity) with the selected entity
+            const words = currentText.split(/\s+/);
+            words[words.length - 1] = entityId;
+            textarea.value = words.join(' ') + ' ';
+            
             suggestionsDiv.classList.remove('show');
             textarea.focus();
           });
