@@ -1,0 +1,5 @@
+# Global code owners
+* @toml0006
+
+# Integration specific
+/custom_components/ai_config_assistant/ @toml0006

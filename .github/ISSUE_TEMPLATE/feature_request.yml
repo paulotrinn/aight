@@ -1,0 +1,51 @@
+name: Feature Request
+description: Suggest a new feature for the AI Configuration Assistant
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please fill out the form below.
+        
+  - type: textarea
+    id: description
+    attributes:
+      label: Feature Description
+      description: A clear and concise description of the feature you'd like to see.
+    validations:
+      required: true
+      
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Use Case
+      description: Describe the use case or problem this feature would solve.
+    validations:
+      required: true
+      
+  - type: textarea
+    id: example
+    attributes:
+      label: Example
+      description: If applicable, provide an example of how this feature would work.
+      placeholder: |
+        For example:
+        - User types: "Create a security system that..."
+        - AI generates: [configuration example]
+        
+  - type: dropdown
+    id: config_type
+    attributes:
+      label: Configuration Type
+      description: What type of configuration would this feature relate to?
+      options:
+        - Automation
+        - Script
+        - Dashboard
+        - Scene
+        - Template
+        - General/Multiple
+        - Other
+    validations:
+      required: false

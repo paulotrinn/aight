@@ -1,0 +1,28 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create release zip
+        run: |
+          cd custom_components/ai_config_assistant
+          zip -r ../../ai-config-assistant.zip . -x "*.pyc" "*__pycache__*"
+          cd ../..
+          
+      - name: Upload release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./ai-config-assistant.zip
+          asset_name: ai-config-assistant.zip
+          asset_content_type: application/zip

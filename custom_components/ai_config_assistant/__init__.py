@@ -1,0 +1,219 @@
+"""AI Configuration Assistant integration for Home Assistant."""
+import logging
+from typing import Any, Dict
+
+import voluptuous as vol
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
+
+from .const import (
+    DOMAIN,
+    CONF_LLM_PROVIDER,
+    CONF_DEFAULT_MODEL,
+    SERVICE_GENERATE_CONFIG,
+    SERVICE_VALIDATE_CONFIG,
+    SERVICE_PREVIEW_CONFIG,
+    LLM_PROVIDERS,
+)
+from .llm_client import LLMClientManager
+from .config_generator import ConfigGenerator
+from .entity_manager import EntityManager
+from .api import async_register_api_views
+from .panel import async_register_panel
+
+_LOGGER = logging.getLogger(__name__)
+
+PLATFORMS: list[Platform] = []
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_LLM_PROVIDER, default="openai"): vol.In(LLM_PROVIDERS),
+                vol.Required(CONF_API_KEY): cv.string,
+                vol.Optional(CONF_DEFAULT_MODEL): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the AI Config Assistant integration."""
+    hass.data.setdefault(DOMAIN, {})
+    
+    # Initialize core components
+    hass.data[DOMAIN]["llm_client"] = LLMClientManager(hass)
+    hass.data[DOMAIN]["config_generator"] = ConfigGenerator(hass)
+    hass.data[DOMAIN]["entity_manager"] = EntityManager(hass)
+    
+    # Initialize entity manager
+    await hass.data[DOMAIN]["entity_manager"].initialize()
+    
+    # Set up config generator
+    hass.data[DOMAIN]["config_generator"].setup(
+        hass.data[DOMAIN]["llm_client"],
+        hass.data[DOMAIN]["entity_manager"]
+    )
+    
+    # Register services
+    await _async_register_services(hass)
+    
+    # Register API endpoints
+    await async_register_api_views(hass)
+    
+    # Register frontend panel
+    await async_register_panel(hass)
+    
+    # Register frontend resources
+    hass.http.register_static_path(
+        "/ai-config-assistant-frontend",
+        hass.config.path("www"),
+        cache_headers=False,
+    )
+    
+    _LOGGER.info("AI Configuration Assistant integration initialized")
+    return True
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up AI Config Assistant from a config entry."""
+    # Store config entry data
+    hass.data[DOMAIN]["config_entry"] = entry
+    
+    # Initialize LLM client with config
+    llm_client = hass.data[DOMAIN]["llm_client"]
+    await llm_client.setup(
+        provider=entry.data[CONF_LLM_PROVIDER],
+        api_key=entry.data[CONF_API_KEY],
+        default_model=entry.data.get(CONF_DEFAULT_MODEL),
+    )
+    
+    return True
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload AI Config Assistant config entry."""
+    # Clean up resources
+    if DOMAIN in hass.data:
+        llm_client = hass.data[DOMAIN].get("llm_client")
+        if llm_client:
+            await llm_client.cleanup()
+    
+    return True
+
+async def _async_register_services(hass: HomeAssistant) -> None:
+    """Register AI Config Assistant services."""
+    
+    async def generate_config_service(call: ServiceCall) -> None:
+        """Generate configuration from natural language input."""
+        config_generator = hass.data[DOMAIN]["config_generator"]
+        
+        prompt = call.data.get("prompt", "")
+        config_type = call.data.get("type", "automation")
+        context = call.data.get("context", {})
+        
+        try:
+            result = await config_generator.generate_config(
+                prompt=prompt,
+                config_type=config_type,
+                context=context,
+            )
+            
+            hass.bus.async_fire(
+                "ai_config_assistant_config_generated",
+                {
+                    "success": True,
+                    "config": result.config,
+                    "explanation": result.explanation,
+                    "entities_used": result.entities_used,
+                },
+            )
+            
+        except Exception as err:
+            _LOGGER.error("Error generating config: %s", err)
+            hass.bus.async_fire(
+                "ai_config_assistant_config_generated",
+                {
+                    "success": False,
+                    "error": str(err),
+                },
+            )
+    
+    async def validate_config_service(call: ServiceCall) -> None:
+        """Validate a configuration."""
+        config_generator = hass.data[DOMAIN]["config_generator"]
+        
+        config_yaml = call.data.get("config", "")
+        config_type = call.data.get("type", "automation")
+        
+        try:
+            result = await config_generator.validate_config(
+                config_yaml=config_yaml,
+                config_type=config_type,
+            )
+            
+            hass.bus.async_fire(
+                "ai_config_assistant_config_validated",
+                {
+                    "success": True,
+                    "valid": result.valid,
+                    "errors": result.errors,
+                    "warnings": result.warnings,
+                },
+            )
+            
+        except Exception as err:
+            _LOGGER.error("Error validating config: %s", err)
+            hass.bus.async_fire(
+                "ai_config_assistant_config_validated",
+                {
+                    "success": False,
+                    "error": str(err),
+                },
+            )
+    
+    async def preview_config_service(call: ServiceCall) -> None:
+        """Preview a configuration with live data."""
+        entity_manager = hass.data[DOMAIN]["entity_manager"]
+        
+        config_yaml = call.data.get("config", "")
+        config_type = call.data.get("type", "automation")
+        
+        try:
+            result = await entity_manager.preview_config(
+                config_yaml=config_yaml,
+                config_type=config_type,
+            )
+            
+            hass.bus.async_fire(
+                "ai_config_assistant_config_previewed",
+                {
+                    "success": True,
+                    "preview": result,
+                },
+            )
+            
+        except Exception as err:
+            _LOGGER.error("Error previewing config: %s", err)
+            hass.bus.async_fire(
+                "ai_config_assistant_config_previewed",
+                {
+                    "success": False,
+                    "error": str(err),
+                },
+            )
+    
+    # Register services
+    hass.services.async_register(
+        DOMAIN, SERVICE_GENERATE_CONFIG, generate_config_service
+    )
+    
+    hass.services.async_register(
+        DOMAIN, SERVICE_VALIDATE_CONFIG, validate_config_service
+    )
+    
+    hass.services.async_register(
+        DOMAIN, SERVICE_PREVIEW_CONFIG, preview_config_service
+    )
