@@ -5,6 +5,7 @@ customElements.define('ai-config-panel', class extends HTMLElement {
     this._hass = null;
     this._currentTab = 'generate';
     this._entities = [];
+    this._autocompleteTimeout = null;
   }
 
   set hass(hass) {
@@ -584,11 +585,22 @@ customElements.define('ai-config-panel', class extends HTMLElement {
       previewBtn.addEventListener('click', () => this._previewConfig());
     }
 
-    // Entity autocomplete
+    // Entity autocomplete with debouncing
     const promptField = root.getElementById('prompt');
     if (promptField) {
       promptField.addEventListener('input', (e) => {
-        this._handleEntityAutocomplete(e.target.value);
+        clearTimeout(this._autocompleteTimeout);
+        this._autocompleteTimeout = setTimeout(() => {
+          this._handleEntityAutocomplete(e.target.value);
+        }, 150);
+      });
+      
+      // Hide suggestions when clicking outside
+      promptField.addEventListener('blur', () => {
+        setTimeout(() => {
+          const suggestionsDiv = root.getElementById('entity-suggestions');
+          suggestionsDiv.classList.remove('show');
+        }, 200); // Small delay to allow click on suggestion
       });
     }
 
@@ -736,13 +748,46 @@ customElements.define('ai-config-panel', class extends HTMLElement {
     const root = this.shadowRoot;
     const suggestionsDiv = root.getElementById('entity-suggestions');
 
-    const entityPattern = /(?:^|\s)(light\.|switch\.|sensor\.|climate\.|cover\.|automation\.|script\.|scene\.|binary_sensor\.|input_boolean\.|input_number\.|input_text\.|input_select\.|input_datetime\.)[a-z0-9_]*$/i;
+    // Enhanced pattern to catch partial entity names
+    const entityPattern = /(?:^|\s)([a-z_]+\.[\w]*?)$/i;
     const match = text.match(entityPattern);
 
     if (match && this._entities.length > 0) {
       const query = match[1].toLowerCase();
+      const queryParts = query.split('.');
+      const domain = queryParts[0];
+      const entityPart = queryParts[1] || '';
+
+      // Filter entities by domain and partial entity name
       const suggestions = this._entities
-        .filter(entity => entity.entity_id.toLowerCase().startsWith(query))
+        .filter(entity => {
+          const entityId = entity.entity_id.toLowerCase();
+          const entityParts = entityId.split('.');
+          
+          // Must match domain and entity part should contain the query substring
+          return entityParts[0] === domain && 
+                 (entityPart === '' || entityParts[1].includes(entityPart));
+        })
+        .sort((a, b) => {
+          // Sort by relevance: exact matches first, then partial matches
+          const aId = a.entity_id.toLowerCase();
+          const bId = b.entity_id.toLowerCase();
+          const aExact = aId === query;
+          const bExact = bId === query;
+          
+          if (aExact && !bExact) return -1;
+          if (!aExact && bExact) return 1;
+          
+          // Then by starts with
+          const aStarts = aId.startsWith(query);
+          const bStarts = bId.startsWith(query);
+          
+          if (aStarts && !bStarts) return -1;
+          if (!aStarts && bStarts) return 1;
+          
+          // Finally alphabetical
+          return aId.localeCompare(bId);
+        })
         .slice(0, 10);
 
       if (suggestions.length > 0) {

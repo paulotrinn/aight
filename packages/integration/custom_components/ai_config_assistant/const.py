@@ -16,6 +16,7 @@ LLM_PROVIDERS = [
     "mistral",
     "groq",
     "ollama",
+    "openrouter",
 ]
 
 # Default models for each provider
@@ -26,6 +27,7 @@ DEFAULT_MODELS = {
     "mistral": "mistral-large-latest",
     "groq": "llama3-70b-8192",
     "ollama": "llama2",
+    "openrouter": "openai/gpt-3.5-turbo",
 }
 
 # Services
