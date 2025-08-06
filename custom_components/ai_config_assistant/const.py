@@ -37,6 +37,7 @@ SERVICE_PREVIEW_CONFIG = "preview_config"
 SERVICE_GET_ENTITIES = "get_entities"
 SERVICE_GET_SUGGESTIONS = "get_suggestions"
 SERVICE_RELOAD = "reload"
+SERVICE_DEPLOY_CONFIG = "deploy_config"
 
 # Configuration types
 CONFIG_TYPES = [

@@ -1945,6 +1945,12 @@ entities:
     this._showTypingIndicator();
     
     try {
+      // Check for special commands
+      if (message.toLowerCase() === 'reload') {
+        await this._reloadAutomations();
+        return;
+      }
+      
       // Check if this is a refinement request
       const isRefinement = this._isRefinementRequest(message);
       
@@ -1952,30 +1958,19 @@ entities:
         // User wants to refine the last configuration
         await this._refineConfiguration(message);
       } else {
-        // Detect entities in the message
-        const detectedEntities = this._detectEntitiesInPrompt(message);
+        // Detect relevant domains and get entities
+        const relevantDomains = this._detectRelevantDomains(message);
+        const relevantEntities = this._getEntitiesForDomains(relevantDomains);
         
-        if (detectedEntities.length > 0) {
-          // Hide typing indicator
-          this._hideTypingIndicator();
-          
-          // Show entity confirmation
-          this._addChatMessage('assistant', `I found some entities that might be relevant to your request. Please confirm the ones you'd like to use:`);
-          this._addChatMessage('entity-confirmation', '', { entities: detectedEntities });
-          
-          // Store context for later
-          this._conversationContext = {
-            originalPrompt: message,
-            detectedEntities: detectedEntities,
-            configType: this._detectConfigType(message)
-          };
-          
-          // Attach listeners for the new buttons
-          setTimeout(() => this._attachEntityConfirmListeners(), 100);
-        } else {
-          // No entities detected, proceed with generation
-          await this._generateFromChat(message, this._detectConfigType(message), []);
-        }
+        // Store context
+        this._conversationContext = {
+          originalPrompt: message,
+          configType: this._detectConfigType(message),
+          relevantEntities: relevantEntities
+        };
+        
+        // Generate configuration directly without confirmation
+        await this._generateFromChat(message, this._conversationContext.configType, relevantEntities);
       }
     } catch (error) {
       this._hideTypingIndicator();
@@ -2043,7 +2038,8 @@ entities:
 
   _detectConfigType(prompt) {
     const lower = prompt.toLowerCase();
-    if (lower.includes('automation') || lower.includes('when') || lower.includes('trigger')) {
+    if (lower.includes('automation') || lower.includes('when') || lower.includes('trigger') || 
+        lower.includes('alert') || lower.includes('notify') || lower.includes('if')) {
       return 'automation';
     } else if (lower.includes('scene')) {
       return 'scene';
@@ -2055,6 +2051,89 @@ entities:
       return 'sensor';
     }
     return 'automation'; // Default
+  }
+
+  _detectRelevantDomains(prompt) {
+    const lower = prompt.toLowerCase();
+    const domains = new Set();
+    
+    // Map keywords to domains
+    const keywordToDomains = {
+      // Devices
+      'light': ['light', 'switch'],
+      'lights': ['light', 'switch'],
+      'lamp': ['light', 'switch'],
+      'bulb': ['light'],
+      'switch': ['switch', 'light'],
+      'door': ['binary_sensor', 'cover', 'lock'],
+      'garage': ['cover', 'binary_sensor'],
+      'window': ['binary_sensor', 'cover'],
+      'lock': ['lock'],
+      'motion': ['binary_sensor'],
+      'presence': ['binary_sensor', 'device_tracker', 'person'],
+      'temperature': ['sensor', 'climate'],
+      'humidity': ['sensor'],
+      'thermostat': ['climate'],
+      'fan': ['fan', 'switch'],
+      'tv': ['media_player', 'switch'],
+      'television': ['media_player', 'switch'],
+      'music': ['media_player'],
+      'speaker': ['media_player'],
+      'camera': ['camera'],
+      'vacuum': ['vacuum'],
+      'alarm': ['alarm_control_panel'],
+      'sensor': ['sensor', 'binary_sensor'],
+      
+      // States and conditions
+      'open': ['binary_sensor', 'cover'],
+      'closed': ['binary_sensor', 'cover'],
+      'on': ['light', 'switch', 'binary_sensor'],
+      'off': ['light', 'switch', 'binary_sensor'],
+      'home': ['person', 'device_tracker', 'zone'],
+      'away': ['person', 'device_tracker', 'zone'],
+      'detected': ['binary_sensor'],
+      
+      // Actions
+      'notify': ['notify'],
+      'alert': ['notify'],
+      'message': ['notify'],
+      'announce': ['notify', 'media_player'],
+      'turn': ['light', 'switch', 'fan'],
+      'dim': ['light'],
+      'brighten': ['light'],
+      'play': ['media_player'],
+      'pause': ['media_player'],
+      'stop': ['media_player'],
+      
+      // Time
+      'sunrise': ['sun'],
+      'sunset': ['sun'],
+      'sun': ['sun']
+    };
+    
+    // Check for keywords and add relevant domains
+    for (const [keyword, domainList] of Object.entries(keywordToDomains)) {
+      if (lower.includes(keyword)) {
+        domainList.forEach(d => domains.add(d));
+      }
+    }
+    
+    // If no specific domains detected, include common ones
+    if (domains.size === 0) {
+      ['light', 'switch', 'binary_sensor', 'sensor', 'person', 'device_tracker'].forEach(d => domains.add(d));
+    }
+    
+    return Array.from(domains);
+  }
+
+  _getEntitiesForDomains(domains) {
+    if (!this._entities || this._entities.length === 0) return [];
+    
+    // Filter entities by domain
+    return this._entities.filter(entity => {
+      const domain = entity.entity_id.split('.')[0];
+      return domains.includes(domain);
+    });
   }
 
   _createEntityConfirmationCard(entities) {
@@ -2099,9 +2178,9 @@ entities:
           <pre>${this._escapeHtml(config)}</pre>
         </div>
         <div class="config-preview-actions">
-          <button class="copy-config-btn">Copy</button>
-          <button class="edit-config-btn">Edit</button>
-          <button class="deploy-config-btn primary">Deploy</button>
+          <button class="copy-config-btn">📋 Copy</button>
+          <button class="edit-config-btn">✏️ Edit</button>
+          <button class="deploy-config-btn primary" data-config="${this._escapeHtml(config)}" data-type="${configType}">🚀 Deploy</button>
         </div>
       </div>
     `;
@@ -2272,7 +2351,8 @@ entities:
         btn.hasListener = true;
         btn.addEventListener('click', async () => {
           const config = btn.closest('.config-preview-message').querySelector('pre').textContent;
-          this._addChatMessage('system', 'Deployment feature coming soon!');
+          const configType = btn.dataset.type;
+          await this._deployConfiguration(config, configType);
         });
       }
     });
@@ -2311,6 +2391,73 @@ entities:
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  async _deployConfiguration(config, configType) {
+    try {
+      this._addChatMessage('system', `Deploying ${configType}...`);
+      
+      // Call the deploy service
+      const result = await this._hass.callService('ai_config_assistant', 'deploy_config', {
+        config: config,
+        type: configType,
+        return_response: true
+      });
+      
+      if (result && result.success) {
+        this._addChatMessage('system', `✅ ${configType} deployed successfully!`);
+        
+        // Offer to reload automations if it was an automation
+        if (configType === 'automation') {
+          setTimeout(() => {
+            this._addChatMessage('assistant', 'The automation has been added. Would you like me to reload automations to activate it?');
+            this._addChatMessage('system', 'Type "reload" to reload automations.');
+          }, 500);
+        }
+      } else if (result && !result.success) {
+        this._addChatMessage('system', `❌ Failed to deploy: ${result.error || 'Unknown error'}`);
+      } else {
+        // Fallback - try to use the appropriate service based on type
+        await this._deployWithFallback(config, configType);
+      }
+    } catch (error) {
+      this._addChatMessage('system', `❌ Error deploying configuration: ${error.message}`);
+    }
+  }
+
+  async _reloadAutomations() {
+    try {
+      this._hideTypingIndicator();
+      this._addChatMessage('system', '🔄 Reloading automations...');
+      
+      await this._hass.callService('automation', 'reload');
+      
+      this._addChatMessage('system', '✅ Automations reloaded successfully!');
+    } catch (error) {
+      this._addChatMessage('system', `❌ Failed to reload automations: ${error.message}`);
+    }
+  }
+
+  async _deployWithFallback(config, configType) {
+    try {
+      // Parse the YAML to get the automation/script/scene data
+      // For now, we'll just show instructions
+      const instructions = {
+        automation: 'To add this automation:\n1. Go to Settings → Automations & Scenes\n2. Click "+ Create Automation"\n3. Click the three dots menu → "Edit in YAML"\n4. Paste the configuration\n5. Click Save',
+        script: 'To add this script:\n1. Go to Settings → Automations & Scenes → Scripts\n2. Click "+ Add Script"\n3. Click the three dots menu → "Edit in YAML"\n4. Paste the configuration\n5. Click Save',
+        scene: 'To add this scene:\n1. Go to Settings → Automations & Scenes → Scenes\n2. Click "+ Add Scene"\n3. Click the three dots menu → "Edit in YAML"\n4. Paste the configuration\n5. Click Save',
+        lovelace: 'To add this card:\n1. Edit your dashboard\n2. Click "+ Add Card"\n3. Search for "Manual"\n4. Paste the configuration\n5. Click Save',
+        sensor: 'To add this sensor:\n1. Add to your configuration.yaml under "template:"\n2. Restart Home Assistant'
+      };
+      
+      this._addChatMessage('assistant', instructions[configType] || 'Configuration copied to clipboard. Please add it manually.');
+      
+      // Copy to clipboard for convenience
+      await navigator.clipboard.writeText(config);
+      this._addChatMessage('system', '📋 Configuration copied to clipboard');
+    } catch (error) {
+      this._addChatMessage('system', `Error: ${error.message}`);
+    }
   }
 
   async _reloadIntegration() {
