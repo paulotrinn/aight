@@ -371,7 +371,10 @@ customElements.define('ai-config-panel', class extends HTMLElement {
       <div class="container">
         <div class="header">
           <h1>Aight</h1>
-          <div class="status" id="entity-count"></div>
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div class="status" id="entity-count"></div>
+            <button id="reload-btn" class="secondary" style="min-width: auto; padding: 8px 16px;">🔄 Reload</button>
+          </div>
         </div>
 
         <div class="tabs">
@@ -504,12 +507,21 @@ customElements.define('ai-config-panel', class extends HTMLElement {
             <h4>Validate & Preview</h4>
             <p>Use the Validate tab to check YAML syntax, and Preview to see how configurations work with your current entity states.</p>
 
+            <h4>Reload Integration</h4>
+            <p>Click the "🔄 Reload" button in the header to reload the integration without restarting Home Assistant. This is useful when:</p>
+            <ul>
+              <li>Installing updates to the integration</li>
+              <li>Changing configuration settings</li>
+              <li>Troubleshooting issues</li>
+            </ul>
+
             <h4>Available Services</h4>
             <p>You can also use these services programmatically:</p>
             <ul>
               <li><code>ai_config_assistant.generate_config</code> - Generate configurations</li>
               <li><code>ai_config_assistant.validate_config</code> - Validate YAML</li>
               <li><code>ai_config_assistant.preview_config</code> - Preview with live data</li>
+              <li><code>ai_config_assistant.reload</code> - Reload the integration</li>
             </ul>
           </div>
         </div>
@@ -622,6 +634,12 @@ customElements.define('ai-config-panel', class extends HTMLElement {
         root.getElementById('preview-yaml').value = config;
         root.querySelector('[data-tab="preview"]').click();
       });
+    }
+
+    // Reload button
+    const reloadBtn = root.getElementById('reload-btn');
+    if (reloadBtn) {
+      reloadBtn.addEventListener('click', () => this._reloadIntegration());
     }
   }
 
@@ -888,5 +906,34 @@ entities:
     };
     
     return samples[type] || '# Generated configuration will appear here';
+  }
+
+  async _reloadIntegration() {
+    const root = this.shadowRoot;
+    const reloadBtn = root.getElementById('reload-btn');
+    
+    if (!this._hass) {
+      this._showMessage('Home Assistant connection not available', 'error');
+      return;
+    }
+    
+    reloadBtn.disabled = true;
+    reloadBtn.innerHTML = '🔄 Reloading...';
+    
+    try {
+      await this._hass.callService('ai_config_assistant', 'reload');
+      this._showMessage('Integration reloaded successfully! 🎉', 'success');
+      
+      // Refresh entities after reload
+      setTimeout(() => {
+        this._loadEntities();
+      }, 1000);
+      
+    } catch (error) {
+      this._showMessage('Failed to reload integration: ' + error.message, 'error');
+    } finally {
+      reloadBtn.disabled = false;
+      reloadBtn.innerHTML = '🔄 Reload';
+    }
   }
 });

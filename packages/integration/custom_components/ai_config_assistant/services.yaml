@@ -24,6 +24,11 @@ generate_config:
             - scene
             - dashboard
             - template
+
+reload:
+  name: Reload Integration
+  description: Reload the AI Configuration Assistant integration without restarting Home Assistant
+  fields: {}
     context:
       name: Context
       description: Additional context or requirements
@@ -63,6 +68,11 @@ validate_config:
             - dashboard
             - template
 
+reload:
+  name: Reload Integration
+  description: Reload the AI Configuration Assistant integration without restarting Home Assistant
+  fields: {}
+
 preview_config:
   name: Preview Configuration
   description: Preview a configuration with live entity data
@@ -87,3 +97,8 @@ preview_config:
             - scene
             - dashboard
             - template
+
+reload:
+  name: Reload Integration
+  description: Reload the AI Configuration Assistant integration without restarting Home Assistant
+  fields: {}

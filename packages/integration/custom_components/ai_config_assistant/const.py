@@ -36,6 +36,7 @@ SERVICE_VALIDATE_CONFIG = "validate_config"
 SERVICE_PREVIEW_CONFIG = "preview_config"
 SERVICE_GET_ENTITIES = "get_entities"
 SERVICE_GET_SUGGESTIONS = "get_suggestions"
+SERVICE_RELOAD = "reload"
 
 # Configuration types
 CONFIG_TYPES = [

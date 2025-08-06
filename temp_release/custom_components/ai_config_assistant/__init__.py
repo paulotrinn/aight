@@ -16,7 +16,6 @@ from .const import (
     SERVICE_GENERATE_CONFIG,
     SERVICE_VALIDATE_CONFIG,
     SERVICE_PREVIEW_CONFIG,
-    SERVICE_RELOAD,
     LLM_PROVIDERS,
 )
 from .llm_client import LLMClientManager
@@ -97,25 +96,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload AI Config Assistant config entry."""
     # Clean up resources
     if DOMAIN in hass.data:
-        # Clean up LLM client
         llm_client = hass.data[DOMAIN].get("llm_client")
         if llm_client:
             await llm_client.cleanup()
-        
-        # Remove services
-        if hass.services.has_service(DOMAIN, SERVICE_GENERATE_CONFIG):
-            hass.services.async_remove(DOMAIN, SERVICE_GENERATE_CONFIG)
-        if hass.services.has_service(DOMAIN, SERVICE_VALIDATE_CONFIG):
-            hass.services.async_remove(DOMAIN, SERVICE_VALIDATE_CONFIG)
-        if hass.services.has_service(DOMAIN, SERVICE_PREVIEW_CONFIG):
-            hass.services.async_remove(DOMAIN, SERVICE_PREVIEW_CONFIG)
-        if hass.services.has_service(DOMAIN, SERVICE_RELOAD):
-            hass.services.async_remove(DOMAIN, SERVICE_RELOAD)
-        
-        # Clear data
-        hass.data.pop(DOMAIN, None)
-        
-        _LOGGER.info("AI Configuration Assistant integration unloaded")
     
     return True
 
@@ -221,36 +204,6 @@ async def _async_register_services(hass: HomeAssistant) -> None:
                 },
             )
     
-    async def reload_service(call: ServiceCall) -> None:
-        """Reload the AI Configuration Assistant integration."""
-        _LOGGER.info("Reloading AI Configuration Assistant integration...")
-        
-        try:
-            # Get the config entry
-            config_entry = hass.data[DOMAIN].get("config_entry")
-            if not config_entry:
-                _LOGGER.error("No config entry found for reload")
-                return
-            
-            # Unload and reload the integration
-            await async_unload_entry(hass, config_entry)
-            await async_setup_entry(hass, config_entry)
-            
-            _LOGGER.info("AI Configuration Assistant integration reloaded successfully")
-            
-            # Fire event to notify UI
-            hass.bus.async_fire(
-                "ai_config_assistant_reloaded",
-                {"success": True, "message": "Integration reloaded successfully"}
-            )
-            
-        except Exception as err:
-            _LOGGER.error("Error reloading integration: %s", err)
-            hass.bus.async_fire(
-                "ai_config_assistant_reloaded",
-                {"success": False, "error": str(err)}
-            )
-
     # Register services
     hass.services.async_register(
         DOMAIN, SERVICE_GENERATE_CONFIG, generate_config_service
@@ -262,8 +215,4 @@ async def _async_register_services(hass: HomeAssistant) -> None:
     
     hass.services.async_register(
         DOMAIN, SERVICE_PREVIEW_CONFIG, preview_config_service
-    )
-    
-    hass.services.async_register(
-        DOMAIN, SERVICE_RELOAD, reload_service
     )
