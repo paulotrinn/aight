@@ -2032,7 +2032,7 @@ entities:
       } else {
         // Detect relevant domains and get entities
         const relevantDomains = this._detectRelevantDomains(message);
-        const relevantEntities = this._getEntitiesForDomains(relevantDomains);
+        const relevantEntities = this._getRelevantEntities(message, relevantDomains);
         
         // Store context
         this._conversationContext = {
@@ -2229,6 +2229,78 @@ entities:
     });
   }
 
+  _getRelevantEntities(prompt, domains) {
+    if (!this._entities || this._entities.length === 0) return [];
+    
+    const lowerPrompt = prompt.toLowerCase();
+    
+    // Extract potential location/room keywords from the prompt
+    const locationKeywords = this._extractLocationKeywords(lowerPrompt);
+    console.log('Entity filtering:', { prompt: lowerPrompt, locationKeywords, domains });
+    
+    // Start with domain-filtered entities
+    let relevantEntities = this._entities.filter(entity => {
+      const domain = entity.entity_id.split('.')[0];
+      return domains.includes(domain);
+    });
+    
+    console.log(`Initial domain filtering: ${relevantEntities.length} entities from domains: ${domains.join(', ')}`);
+    
+    // If we have location keywords, prioritize entities that match them
+    if (locationKeywords.length > 0) {
+      const locationFiltered = relevantEntities.filter(entity => {
+        const entityId = entity.entity_id.toLowerCase();
+        const friendlyName = (entity.friendly_name || '').toLowerCase();
+        
+        return locationKeywords.some(keyword => 
+          entityId.includes(keyword) || friendlyName.includes(keyword)
+        );
+      });
+      
+      // If we found location-specific entities, use them; otherwise fall back to domain filtering
+      if (locationFiltered.length > 0) {
+        console.log(`Location filtering found ${locationFiltered.length} relevant entities`);
+        relevantEntities = locationFiltered;
+      } else {
+        console.log('No location-specific entities found, using domain filtering');
+      }
+    }
+    
+    // Limit entities to prevent service overload (max 100 entities)
+    if (relevantEntities.length > 100) {
+      console.warn(`Too many entities (${relevantEntities.length}), limiting to 100 most relevant`);
+      relevantEntities = relevantEntities.slice(0, 100);
+    }
+    
+    return relevantEntities;
+  }
+
+  _extractLocationKeywords(prompt) {
+    // Common room/location keywords that might appear in prompts
+    const commonLocations = [
+      'kitchen', 'living room', 'bedroom', 'bathroom', 'garage', 'basement', 'office',
+      'dining room', 'family room', 'guest room', 'master bedroom', 'kids room',
+      'laundry room', 'pantry', 'closet', 'hallway', 'stairs', 'entryway', 'foyer',
+      'porch', 'deck', 'patio', 'yard', 'garden', 'driveway', 'outdoors', 'outside',
+      'upstairs', 'downstairs', 'main floor', 'teen center', 'playroom', 'gym',
+      'apartment', 'studio', 'loft', 'attic'
+    ];
+    
+    const foundKeywords = [];
+    
+    // Check for each location keyword in the prompt
+    for (const location of commonLocations) {
+      if (prompt.includes(location)) {
+        // Also add variations (e.g., "living_room", "livingroom")
+        foundKeywords.push(location);
+        foundKeywords.push(location.replace(/\s+/g, '_'));
+        foundKeywords.push(location.replace(/\s+/g, ''));
+      }
+    }
+    
+    return foundKeywords;
+  }
+
   _createEntityConfirmationCard(entities) {
     const entitiesHtml = entities.map((entity, index) => {
       const entityObj = entity.entity || entity;
@@ -2274,14 +2346,22 @@ Service Call Details:
 ${JSON.stringify(debugInfo.serviceCall || {}, null, 2)}
 
 Error Details:
-${error.stack || error.message || error}
+${debugInfo.errorMessage || error.message || 'Unknown error'}
+
+Error Stack:
+${debugInfo.errorStack || error.stack || 'No stack trace available'}
 
 Request Context:
 - Timestamp: ${debugInfo.timestamp || 'Unknown'}
 - Prompt: "${debugInfo.prompt || 'Unknown'}"
 - Config Type: ${debugInfo.configType || 'Unknown'}
 - Relevant Domains: ${debugInfo.domains ? debugInfo.domains.join(', ') : 'Unknown'}
-- Entity Count: ${debugInfo.entityCount || 'Unknown'}
+- Entity Filtering: ${debugInfo.filteredFromTotal || `${debugInfo.relevantEntityCount || 0} entities`}
+- Total Entities Available: ${debugInfo.totalEntityCount || 'Unknown'}
+
+Entity IDs Sent (first 10):
+${debugInfo.entityIds ? debugInfo.entityIds.slice(0, 10).join('\n') : 'None'}
+${debugInfo.entityIds && debugInfo.entityIds.length > 10 ? `\n... and ${debugInfo.entityIds.length - 10} more` : ''}
 
 Please share this information when reporting issues.
         </div>
@@ -2323,10 +2403,11 @@ Please share this information when reporting issues.
         prompt: prompt,
         configType: configType,
         timestamp: new Date().toISOString(),
-        entityCount: this._entities.length,
+        totalEntityCount: this._entities.length,
         relevantEntityCount: entities.length,
         domains: relevantDomains,
-        entities: entities.map(e => (e.entity || e).entity_id)
+        filteredFromTotal: `${entities.length} of ${this._entities.length} entities`,
+        entityIds: entities.map(e => (e.entity || e).entity_id)
       };
 
       serviceCall = {
@@ -2396,10 +2477,13 @@ Please share this information when reporting issues.
         prompt: prompt,
         configType: configType,
         timestamp: new Date().toISOString(),
-        entityCount: this._entities ? this._entities.length : 0,
+        totalEntityCount: this._entities ? this._entities.length : 0,
         relevantEntityCount: entities ? entities.length : 0,
         domains: this._detectRelevantDomains(prompt),
-        serviceCall: serviceCall
+        filteredFromTotal: entities && this._entities ? `${entities.length} of ${this._entities.length} entities` : 'N/A',
+        serviceCall: serviceCall,
+        errorMessage: error.message,
+        errorStack: error.stack
       };
       
       this._addChatMessage('assistant', `Error generating configuration: ${error.message}`, {
