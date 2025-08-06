@@ -1,8 +1,10 @@
-# AI Configuration Assistant for Home Assistant
+# Aight - AI Configuration Assistant for Home Assistant
 
 🚀 **v1.3.2** - The most advanced Home Assistant AI configuration tool with **conversational chat interface**!
 
-A powerful Home Assistant integration that uses AI to help you create configurations through natural language. No more YAML editing - just chat with the AI and get working configurations instantly!
+📖 **[Documentation & Demo](https://toml0006.github.io/aight/)** | 📦 **[Download Latest](https://github.com/toml0006/aight/releases/latest)** | 💬 **[Community](https://github.com/toml0006/aight/discussions)**
+
+**Aight** is a powerful Home Assistant integration that uses AI to help you create configurations through natural language. No more YAML editing - just chat with the AI and get working configurations instantly!
 
 ## ✨ Key Features
 
@@ -61,7 +63,7 @@ A powerful Home Assistant integration that uses AI to help you create configurat
    - Click "Add"
 
 3. **Install the integration:**
-   - Search for "AI Configuration Assistant" in HACS
+   - Search for "Aight" or "AI Configuration Assistant" in HACS
    - Click "Download"
    - Restart Home Assistant
 
@@ -77,7 +79,7 @@ A powerful Home Assistant integration that uses AI to help you create configurat
 
 1. Go to Settings → Devices & Services
 2. Click "Add Integration"
-3. Search for "AI Configuration Assistant"
+3. Search for "Aight" or "AI Configuration Assistant"
 4. Follow the setup wizard
 
 ### Step 2: Configure Your LLM Provider
@@ -328,9 +330,10 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 ## Support
 
-- **Issues**: Report bugs and request features on [GitHub Issues](https://github.com/toml0006/aight/issues)
-- **Discussions**: Join the conversation in [GitHub Discussions](https://github.com/toml0006/aight/discussions)
-- **Home Assistant Community**: Visit the [Home Assistant Community Forum](https://community.home-assistant.io/)
+- **📖 Documentation**: Visit [toml0006.github.io/aight](https://toml0006.github.io/aight/) for full documentation and examples
+- **🐛 Issues**: Report bugs and request features on [GitHub Issues](https://github.com/toml0006/aight/issues)
+- **💬 Discussions**: Join the conversation in [GitHub Discussions](https://github.com/toml0006/aight/discussions)
+- **🏡 Community**: Visit the [Home Assistant Community Forum](https://community.home-assistant.io/)
 
 ## Disclaimer
 
