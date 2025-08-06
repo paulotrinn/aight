@@ -29,6 +29,19 @@ A powerful Home Assistant integration that uses AI to help you create configurat
 
 ## Installation
 
+### Quick Install - Full Featured Version
+
+[![Direct Download - Full Featured Version](https://img.shields.io/badge/Download-Full%20Featured%20Version-blue?style=for-the-badge&logo=homeassistant)](https://github.com/toml0006/aight/releases/download/v1.0.0/ai_config_assistant_v1.0.0_full.zip)
+
+Click the button above to download the latest full-featured version with:
+- ✨ 4 tabs (Generate, Validate, Preview, Help)
+- 🔤 Entity autocomplete with live suggestions
+- 🎯 Example prompt chips for quick access
+- 📊 Live entity count display
+- 🎨 Enhanced UI with animations
+
+### HACS Installation
+
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=toml0006&repository=aight&category=integration)
 
 ### Method 1: HACS (Recommended)
