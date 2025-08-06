@@ -1,22 +1,24 @@
 # AI Configuration Assistant for Home Assistant
 
-A powerful Home Assistant integration that uses AI to help you create configurations through natural language. Generate automations, scripts, dashboards, and more just by describing what you want in plain English!
+🚀 **v1.3.1** - The most advanced Home Assistant AI configuration tool with **conversational chat interface**!
 
-## Features
+A powerful Home Assistant integration that uses AI to help you create configurations through natural language. No more YAML editing - just chat with the AI and get working configurations instantly!
 
-🤖 **Natural Language Generation**: Describe what you want in plain English and get valid YAML configurations
+## ✨ Key Features
 
-🔄 **Live Preview**: See your configuration in action with real entity data before deploying
+💬 **Conversational Chat Interface**: Chat naturally with AI - no forms, no interruptions, just results!
 
-🎯 **Smart Autocompletion**: Intelligent entity suggestions based on context and existing devices
+🤖 **Smart Entity Detection**: Automatically finds relevant entities based on your prompt
 
-🔍 **Multi-LLM Support**: Choose from OpenAI, Anthropic Claude, Google Gemini, and more
+🚀 **One-Click Deployment**: Deploy automations, scripts, and scenes directly to Home Assistant
 
-✅ **Configuration Validation**: Built-in validation with helpful error messages and suggestions
+🔄 **Iterative Refinement**: Say "also turn on the TV" or "but only on weekdays" to modify configurations
 
-📱 **Modern UI**: Clean, responsive interface that follows Home Assistant design standards
+🔍 **Multi-LLM Support**: OpenAI, Anthropic Claude, Google Gemini, Groq, Ollama, and OpenRouter
 
-🔧 **Multiple Config Types**: Support for automations, scripts, scenes, dashboards, cards, and templates
+🛠️ **Advanced Error Handling**: Detailed error logs with progressive disclosure for easy debugging
+
+📱 **Mobile Responsive**: Beautiful interface that works perfectly on phones, tablets, and desktops
 
 ## Supported Configuration Types
 
@@ -29,16 +31,17 @@ A powerful Home Assistant integration that uses AI to help you create configurat
 
 ## Installation
 
-### Quick Install - Full Featured Version
+### 🚀 Quick Install - Latest Version
 
-[![Direct Download - Full Featured Version](https://img.shields.io/badge/Download-Full%20Featured%20Version-blue?style=for-the-badge&logo=homeassistant)](https://github.com/toml0006/aight/releases/download/v1.0.0/ai_config_assistant_v1.0.0_full.zip)
+[![Download Latest Version](https://img.shields.io/badge/Download-v1.3.1%20Latest-success?style=for-the-badge&logo=homeassistant)](https://github.com/toml0006/aight/releases/latest/download/aight.zip)
 
-Click the button above to download the latest full-featured version with:
-- ✨ 4 tabs (Generate, Validate, Preview, Help)
-- 🔤 Entity autocomplete with live suggestions
-- 🎯 Example prompt chips for quick access
-- 📊 Live entity count display
-- 🎨 Enhanced UI with animations
+**v1.3.1** includes the revolutionary **conversational chat interface**:
+- 💬 Natural chat experience - just type what you want!
+- 🎯 Automatic entity detection - no manual selection needed
+- 🚀 One-click deployment to Home Assistant
+- 🔄 Iterative refinement with follow-up messages
+- 🛠️ Advanced error logging for easy debugging
+- 📱 Mobile-first responsive design
 
 ### HACS Installation
 
@@ -98,16 +101,49 @@ Choose from supported providers and add your API key:
 - **Groq**: Llama3-70B, Mixtral-8x7B
 - **Ollama**: Local models (no API key required)
 
+## 🎯 How It Works - Conversational Interface
+
+### The New Chat Experience
+
+![Chat Interface](https://img.shields.io/badge/NEW-Conversational%20Chat-brightgreen?style=for-the-badge)
+
+1. **Open the Chat Tab**: Navigate to "AI Config" panel and click the "Chat" tab
+2. **Just Type**: Describe what you want in natural language
+3. **Get Results**: The AI automatically detects entities and generates configuration
+4. **Deploy Instantly**: Click the Deploy button to add it to Home Assistant
+5. **Refine as Needed**: Say "also turn on the TV" or "but only on weekdays"
+
+### Example Conversation
+
+```
+You: Alert me when the garage door is left open for more than 10 minutes
+
+🤖 Assistant: Great! I've created an automation for you:
+[Shows YAML configuration with Deploy button]
+
+You: Also send the alert to my phone
+
+🤖 Assistant: I've updated the automation to include phone notifications:
+[Shows updated configuration]
+```
+
+### Chat Commands
+- **"reload"** - Reload automations after deployment
+- **"also [action]"** - Add additional actions
+- **"but only [condition]"** - Add conditions
+- **"change [detail]"** - Modify specific parts
+
 ## Usage
 
-### Basic Usage
+### Classic Form Interface (Still Available)
 
 1. Navigate to the "AI Config" panel in your Home Assistant sidebar
-2. Select the configuration type you want to create
-3. Describe what you want in natural language
-4. Click "Generate Configuration"
-5. Review the generated YAML and live preview
-6. Copy or save the configuration
+2. Click the "Form" tab for the traditional interface
+3. Select the configuration type you want to create
+4. Describe what you want in natural language
+5. Click "Generate Configuration"
+6. Review the generated YAML and live preview
+7. Copy or save the configuration
 
 ### Example Prompts
 
@@ -257,6 +293,31 @@ Contributions are welcome! Please:
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for details.
+
+## 📝 Changelog
+
+### v1.3.1 (Latest) - Enhanced Error Handling
+- 🔧 Fixed send button styling to be perfectly circular
+- 📋 Added progressive error disclosure with detailed debug logs
+- 🛠️ Enhanced error context for better troubleshooting
+- 🎨 Improved UI polish and visual feedback
+
+### v1.3.0 - Streamlined Chat Experience  
+- 🚫 Removed entity confirmation UI - fully automatic now
+- 🤖 Smart domain detection sends only relevant entities to LLM
+- 🚀 Working Deploy button for automations, scripts, and scenes
+- 💬 Added "reload" command and refinement capabilities
+
+### v1.2.1 - Service Response Fix
+- ✅ Fixed "Unknown error" issue with service response handling
+- 🔄 Added backward compatibility for older Home Assistant versions
+- 🔧 Improved entity ID extraction in chat flow
+
+### v1.2.0 - Conversational Interface
+- 💬 Revolutionary chat-first interface with message bubbles
+- 🎯 Automatic entity detection and confirmation cards
+- 🔄 Multi-turn conversation support with context management
+- 📱 Mobile-responsive design with smooth animations
 
 ## Support
 
