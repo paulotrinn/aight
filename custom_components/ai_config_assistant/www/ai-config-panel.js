@@ -2345,6 +2345,9 @@ entities:
 Service Call Details:
 ${JSON.stringify(debugInfo.serviceCall || {}, null, 2)}
 
+Service Response:
+${debugInfo.fullServiceResponse || 'No response captured'}
+
 Error Details:
 ${debugInfo.errorMessage || error.message || 'Unknown error'}
 
@@ -2417,7 +2420,9 @@ Please share this information when reporting issues.
         return_response: true
       };
 
+      console.log('Making service call with:', serviceCall);
       const result = await this._hass.callService('ai_config_assistant', 'generate_config', serviceCall);
+      console.log('Service call result:', result);
       
       // Hide typing indicator
       this._hideTypingIndicator();
@@ -2446,12 +2451,15 @@ Please share this information when reporting issues.
         // Add refinement hint
         this._addChatMessage('system', 'You can refine this configuration by saying things like "also turn on the TV" or "but only on weekdays"');
       } else if (result && !result.success) {
-        this._addChatMessage('assistant', `I couldn't generate the configuration: ${result.error || 'Unknown error'}`, {
-          error: new Error(result.error || 'Unknown error'),
+        const errorMessage = result.error || result.message || 'Unknown error';
+        console.error('Service call failed:', result);
+        this._addChatMessage('assistant', `I couldn't generate the configuration: ${errorMessage}`, {
+          error: new Error(errorMessage),
           debugInfo: {
             ...debugInfo,
             serviceCall: serviceCall,
-            serviceResponse: result
+            serviceResponse: result,
+            fullServiceResponse: JSON.stringify(result, null, 2)
           }
         });
       } else {
@@ -2473,6 +2481,9 @@ Please share this information when reporting issues.
     } catch (error) {
       this._hideTypingIndicator();
       
+      console.error('Service call threw exception:', error);
+      console.error('Service call details:', serviceCall);
+      
       const debugInfo = {
         prompt: prompt,
         configType: configType,
@@ -2483,7 +2494,9 @@ Please share this information when reporting issues.
         filteredFromTotal: entities && this._entities ? `${entities.length} of ${this._entities.length} entities` : 'N/A',
         serviceCall: serviceCall,
         errorMessage: error.message,
-        errorStack: error.stack
+        errorStack: error.stack,
+        errorType: error.constructor.name,
+        fullServiceResponse: `Exception thrown: ${error.message}`
       };
       
       this._addChatMessage('assistant', `Error generating configuration: ${error.message}`, {
