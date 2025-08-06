@@ -3,9 +3,12 @@ customElements.define('ai-config-panel', class extends HTMLElement {
     super();
     this.attachShadow({ mode: 'open' });
     this._hass = null;
-    this._currentTab = 'generate';
+    this._currentTab = 'chat';
     this._entities = [];
     this._autocompleteTimeout = null;
+    this._conversationMessages = [];
+    this._conversationContext = {};
+    this._isProcessing = false;
   }
 
   set hass(hass) {
@@ -58,6 +61,7 @@ customElements.define('ai-config-panel', class extends HTMLElement {
           gap: 8px;
           margin-bottom: 24px;
           border-bottom: 1px solid var(--divider-color);
+          overflow-x: auto;
         }
 
         .tab {
@@ -401,6 +405,358 @@ customElements.define('ai-config-panel', class extends HTMLElement {
           background: rgba(244, 67, 54, 0.1);
         }
 
+        /* Conversational Interface Styles */
+        .chat-container {
+          display: flex;
+          flex-direction: column;
+          height: calc(100vh - 200px);
+          max-height: 700px;
+          background: var(--card-background-color);
+          border-radius: 8px;
+          overflow: hidden;
+        }
+
+        .chat-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 16px;
+          background: var(--primary-color);
+          color: white;
+        }
+
+        .chat-header h3 {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 500;
+        }
+
+        .chat-status {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 12px;
+          opacity: 0.9;
+        }
+
+        .chat-status-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #4caf50;
+          animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+
+        .chat-messages {
+          flex: 1;
+          overflow-y: auto;
+          padding: 16px;
+          background: var(--secondary-background-color);
+          scroll-behavior: smooth;
+        }
+
+        .chat-message {
+          display: flex;
+          margin-bottom: 16px;
+          animation: slideInUp 0.3s ease-out;
+        }
+
+        @keyframes slideInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .chat-message.user {
+          justify-content: flex-end;
+        }
+
+        .chat-message.assistant {
+          justify-content: flex-start;
+        }
+
+        .chat-message.system {
+          justify-content: center;
+        }
+
+        .message-bubble {
+          max-width: 70%;
+          padding: 12px 16px;
+          border-radius: 18px;
+          position: relative;
+          word-wrap: break-word;
+        }
+
+        .user .message-bubble {
+          background: var(--primary-color);
+          color: white;
+          border-bottom-right-radius: 4px;
+        }
+
+        .assistant .message-bubble {
+          background: var(--card-background-color);
+          color: var(--primary-text-color);
+          border-bottom-left-radius: 4px;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .system .message-bubble {
+          background: var(--info-color);
+          color: white;
+          font-size: 12px;
+          padding: 8px 12px;
+          border-radius: 12px;
+        }
+
+        .message-content {
+          font-size: 14px;
+          line-height: 1.5;
+        }
+
+        .message-timestamp {
+          font-size: 11px;
+          opacity: 0.7;
+          margin-top: 4px;
+        }
+
+        .typing-indicator {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          padding: 8px 12px;
+        }
+
+        .typing-indicator span {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: var(--secondary-text-color);
+          animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+          animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+          animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+          0%, 60%, 100% { opacity: 0.3; }
+          30% { opacity: 1; }
+        }
+
+        .chat-input-container {
+          padding: 16px;
+          background: var(--card-background-color);
+          border-top: 1px solid var(--divider-color);
+        }
+
+        .chat-input-wrapper {
+          display: flex;
+          gap: 8px;
+          align-items: flex-end;
+        }
+
+        .chat-input {
+          flex: 1;
+          min-height: 40px;
+          max-height: 120px;
+          padding: 10px 16px;
+          border: 1px solid var(--divider-color);
+          border-radius: 24px;
+          background: var(--secondary-background-color);
+          font-size: 14px;
+          font-family: inherit;
+          resize: none;
+          outline: none;
+          transition: border-color 0.2s;
+        }
+
+        .chat-input:focus {
+          border-color: var(--primary-color);
+        }
+
+        .chat-send-btn {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: var(--primary-color);
+          color: white;
+          border: none;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+        }
+
+        .chat-send-btn:hover:not(:disabled) {
+          transform: scale(1.1);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .chat-send-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .chat-quick-actions {
+          display: flex;
+          gap: 8px;
+          margin-top: 8px;
+          flex-wrap: wrap;
+        }
+
+        .quick-action-chip {
+          padding: 6px 12px;
+          background: var(--secondary-background-color);
+          border: 1px solid var(--divider-color);
+          border-radius: 16px;
+          font-size: 12px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .quick-action-chip:hover {
+          background: var(--primary-color);
+          color: white;
+          border-color: var(--primary-color);
+        }
+
+        .entity-confirm-card {
+          background: var(--card-background-color);
+          border: 1px solid var(--divider-color);
+          border-radius: 8px;
+          padding: 12px;
+          margin: 8px 0;
+        }
+
+        .entity-confirm-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 12px;
+          font-weight: 500;
+        }
+
+        .entity-confirm-list {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .entity-confirm-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 8px;
+          background: var(--secondary-background-color);
+          border-radius: 4px;
+          font-size: 13px;
+        }
+
+        .entity-confirm-item.confirmed {
+          background: rgba(76, 175, 80, 0.1);
+          border: 1px solid var(--success-color);
+        }
+
+        .entity-confirm-actions {
+          display: flex;
+          gap: 8px;
+          margin-top: 12px;
+        }
+
+        .config-preview-message {
+          background: var(--card-background-color);
+          border-radius: 8px;
+          padding: 12px;
+          margin: 8px 0;
+        }
+
+        .config-preview-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 12px;
+        }
+
+        .config-preview-type {
+          display: inline-block;
+          padding: 4px 8px;
+          background: var(--primary-color);
+          color: white;
+          border-radius: 4px;
+          font-size: 11px;
+          text-transform: uppercase;
+          font-weight: 500;
+        }
+
+        .config-preview-code {
+          background: var(--secondary-background-color);
+          border: 1px solid var(--divider-color);
+          border-radius: 4px;
+          padding: 12px;
+          font-family: 'Roboto Mono', monospace;
+          font-size: 12px;
+          overflow-x: auto;
+          max-height: 300px;
+          overflow-y: auto;
+        }
+
+        .config-preview-actions {
+          display: flex;
+          gap: 8px;
+          margin-top: 12px;
+        }
+
+        .config-preview-actions button {
+          padding: 8px 16px;
+          border-radius: 4px;
+          border: 1px solid var(--divider-color);
+          background: white;
+          cursor: pointer;
+          font-size: 13px;
+          transition: all 0.2s;
+        }
+
+        .config-preview-actions button:hover {
+          background: var(--primary-color);
+          color: white;
+          border-color: var(--primary-color);
+        }
+
+        .config-preview-actions button.primary {
+          background: var(--primary-color);
+          color: white;
+          border-color: var(--primary-color);
+        }
+
+        @media (max-width: 768px) {
+          .chat-container {
+            height: calc(100vh - 150px);
+          }
+          
+          .message-bubble {
+            max-width: 85%;
+          }
+          
+          .chat-quick-actions {
+            justify-content: center;
+          }
+        }
+
         .entity-match-info {
           flex-grow: 1;
         }
@@ -462,14 +818,52 @@ customElements.define('ai-config-panel', class extends HTMLElement {
         </div>
 
         <div class="tabs">
-          <button class="tab active" data-tab="generate">Generate</button>
+          <button class="tab active" data-tab="chat">Chat</button>
+          <button class="tab" data-tab="generate">Form</button>
           <button class="tab" data-tab="validate">Validate</button>
           <button class="tab" data-tab="preview">Preview</button>
           <button class="tab" data-tab="debug">LLM Debug</button>
           <button class="tab" data-tab="help">Help</button>
         </div>
 
-        <div class="content active" id="generate">
+        <div class="content active" id="chat">
+          <div class="chat-container">
+            <div class="chat-header">
+              <h3>🤖 AI Configuration Assistant</h3>
+              <div class="chat-status">
+                <span class="chat-status-dot"></span>
+                <span>Ready</span>
+              </div>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+              <!-- Messages will be added here dynamically -->
+            </div>
+            <div class="chat-input-container">
+              <div class="chat-input-wrapper">
+                <textarea 
+                  class="chat-input" 
+                  id="chat-input"
+                  placeholder="Describe what you want to configure..."
+                  rows="1"
+                ></textarea>
+                <button class="chat-send-btn" id="chat-send-btn">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                </button>
+              </div>
+              <div class="chat-quick-actions">
+                <div class="quick-action-chip" data-action="automation">Create Automation</div>
+                <div class="quick-action-chip" data-action="scene">Create Scene</div>
+                <div class="quick-action-chip" data-action="script">Create Script</div>
+                <div class="quick-action-chip" data-action="dashboard">Create Dashboard</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="content" id="generate">
           <div class="card">
             <div class="input-group">
               <label>Configuration Type</label>
@@ -684,6 +1078,9 @@ customElements.define('ai-config-panel', class extends HTMLElement {
   _attachListeners() {
     const root = this.shadowRoot;
 
+    // Initialize chat on first render
+    this._initializeChat();
+
     // Tab switching
     root.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', () => {
@@ -800,6 +1197,37 @@ customElements.define('ai-config-panel', class extends HTMLElement {
     if (skipDetectionBtn) {
       skipDetectionBtn.addEventListener('click', () => this._skipEntityDetection());
     }
+
+    // Chat interface event listeners
+    const chatInput = root.getElementById('chat-input');
+    const chatSendBtn = root.getElementById('chat-send-btn');
+    
+    if (chatInput && chatSendBtn) {
+      // Send message on button click
+      chatSendBtn.addEventListener('click', () => this._sendChatMessage());
+      
+      // Send message on Enter (without Shift)
+      chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          this._sendChatMessage();
+        }
+      });
+      
+      // Auto-resize textarea
+      chatInput.addEventListener('input', () => {
+        chatInput.style.height = 'auto';
+        chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
+      });
+    }
+    
+    // Quick action chips
+    root.querySelectorAll('.quick-action-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const action = chip.dataset.action;
+        this._handleQuickAction(action);
+      });
+    });
   }
 
   _confirmDetectedEntities() {
@@ -1411,6 +1839,459 @@ entities:
       // TODO: Implement entity picker for replacement
       this._showMessage('Entity replacement coming soon!', 'info');
     }
+  }
+
+  // Chat Interface Methods
+  _initializeChat() {
+    // Add welcome message if no messages exist
+    if (this._conversationMessages.length === 0) {
+      this._addChatMessage('assistant', 'Hi! I\'m your AI Configuration Assistant. I can help you create automations, scenes, scripts, and dashboards for Home Assistant. Just describe what you want in natural language!');
+      
+      // Add example suggestions
+      this._addChatMessage('system', 'Try: "Turn on the lights when I get home after sunset" or "Create a bedtime routine"');
+    }
+  }
+
+  _addChatMessage(type, content, extras = {}) {
+    const root = this.shadowRoot;
+    const messagesContainer = root.getElementById('chat-messages');
+    if (!messagesContainer) return;
+
+    const messageEl = document.createElement('div');
+    messageEl.className = `chat-message ${type}`;
+    
+    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    if (type === 'user' || type === 'assistant') {
+      messageEl.innerHTML = `
+        <div class="message-bubble">
+          <div class="message-content">${this._escapeHtml(content)}</div>
+          <div class="message-timestamp">${timestamp}</div>
+        </div>
+      `;
+    } else if (type === 'system') {
+      messageEl.innerHTML = `
+        <div class="message-bubble">
+          <div class="message-content">${this._escapeHtml(content)}</div>
+        </div>
+      `;
+    } else if (type === 'entity-confirmation') {
+      messageEl.innerHTML = this._createEntityConfirmationCard(extras.entities);
+    } else if (type === 'config-preview') {
+      messageEl.innerHTML = this._createConfigPreviewCard(extras.config, extras.configType);
+    }
+    
+    messagesContainer.appendChild(messageEl);
+    
+    // Store message in conversation history
+    this._conversationMessages.push({ type, content, timestamp, extras });
+    
+    // Scroll to bottom
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  _showTypingIndicator() {
+    const root = this.shadowRoot;
+    const messagesContainer = root.getElementById('chat-messages');
+    if (!messagesContainer) return;
+
+    const typingEl = document.createElement('div');
+    typingEl.className = 'chat-message assistant';
+    typingEl.id = 'typing-indicator';
+    typingEl.innerHTML = `
+      <div class="message-bubble">
+        <div class="typing-indicator">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    `;
+    
+    messagesContainer.appendChild(typingEl);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  _hideTypingIndicator() {
+    const root = this.shadowRoot;
+    const typingEl = root.getElementById('typing-indicator');
+    if (typingEl) {
+      typingEl.remove();
+    }
+  }
+
+  async _sendChatMessage() {
+    const root = this.shadowRoot;
+    const chatInput = root.getElementById('chat-input');
+    const chatSendBtn = root.getElementById('chat-send-btn');
+    
+    if (!chatInput || !chatInput.value.trim()) return;
+    
+    const message = chatInput.value.trim();
+    
+    // Add user message
+    this._addChatMessage('user', message);
+    
+    // Clear input and disable send button
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+    chatSendBtn.disabled = true;
+    this._isProcessing = true;
+    
+    // Update status
+    this._updateChatStatus('Processing...');
+    
+    // Show typing indicator
+    this._showTypingIndicator();
+    
+    try {
+      // Check if this is a refinement request
+      const isRefinement = this._isRefinementRequest(message);
+      
+      if (isRefinement && this._conversationContext.lastConfig) {
+        // User wants to refine the last configuration
+        await this._refineConfiguration(message);
+      } else {
+        // Detect entities in the message
+        const detectedEntities = this._detectEntitiesInPrompt(message);
+        
+        if (detectedEntities.length > 0) {
+          // Hide typing indicator
+          this._hideTypingIndicator();
+          
+          // Show entity confirmation
+          this._addChatMessage('assistant', `I found some entities that might be relevant to your request. Please confirm the ones you'd like to use:`);
+          this._addChatMessage('entity-confirmation', '', { entities: detectedEntities });
+          
+          // Store context for later
+          this._conversationContext = {
+            originalPrompt: message,
+            detectedEntities: detectedEntities,
+            configType: this._detectConfigType(message)
+          };
+          
+          // Attach listeners for the new buttons
+          setTimeout(() => this._attachEntityConfirmListeners(), 100);
+        } else {
+          // No entities detected, proceed with generation
+          await this._generateFromChat(message, this._detectConfigType(message), []);
+        }
+      }
+    } catch (error) {
+      this._hideTypingIndicator();
+      this._addChatMessage('assistant', `Sorry, I encountered an error: ${error.message}`);
+    } finally {
+      chatSendBtn.disabled = false;
+      this._isProcessing = false;
+      this._updateChatStatus('Ready');
+    }
+  }
+
+  _isRefinementRequest(message) {
+    const lower = message.toLowerCase();
+    const refinementKeywords = [
+      'also', 'add', 'change', 'modify', 'update', 'remove',
+      'but', 'except', 'only', 'instead', 'different'
+    ];
+    
+    // Check if we have a previous config and the message contains refinement keywords
+    return this._conversationContext.lastConfig && 
+           refinementKeywords.some(keyword => lower.includes(keyword));
+  }
+
+  async _refineConfiguration(refinementRequest) {
+    try {
+      const lastConfig = this._conversationContext.lastConfig;
+      const configType = this._conversationContext.lastConfigType;
+      
+      // Combine original prompt with refinement
+      const refinedPrompt = `${this._conversationContext.originalPrompt}. ${refinementRequest}`;
+      
+      // Generate refined configuration
+      const result = await this._hass.callService('ai_config_assistant', 'generate_config', {
+        prompt: refinedPrompt,
+        type: configType,
+        entities: this._conversationContext.confirmedEntities || []
+      });
+      
+      this._hideTypingIndicator();
+      
+      if (result && result.config) {
+        // Store the new config as last config
+        this._conversationContext.lastConfig = result.config;
+        this._conversationContext.originalPrompt = refinedPrompt;
+        
+        // Show refined configuration
+        this._addChatMessage('assistant', `I've updated the ${configType} based on your request:`);
+        this._addChatMessage('config-preview', '', {
+          config: result.config,
+          configType: configType
+        });
+        
+        setTimeout(() => this._attachConfigPreviewListeners(), 100);
+      } else {
+        this._addChatMessage('assistant', `I couldn't refine the configuration. Please try again with more details.`);
+      }
+    } catch (error) {
+      this._hideTypingIndicator();
+      this._addChatMessage('assistant', `Error refining configuration: ${error.message}`);
+    }
+  }
+
+  _detectConfigType(prompt) {
+    const lower = prompt.toLowerCase();
+    if (lower.includes('automation') || lower.includes('when') || lower.includes('trigger')) {
+      return 'automation';
+    } else if (lower.includes('scene')) {
+      return 'scene';
+    } else if (lower.includes('script') || lower.includes('sequence')) {
+      return 'script';
+    } else if (lower.includes('dashboard') || lower.includes('card') || lower.includes('lovelace')) {
+      return 'lovelace';
+    } else if (lower.includes('sensor') || lower.includes('template')) {
+      return 'sensor';
+    }
+    return 'automation'; // Default
+  }
+
+  _createEntityConfirmationCard(entities) {
+    const entitiesHtml = entities.map((entity, index) => {
+      const entityObj = entity.entity || entity;
+      const isConfirmed = entity.confirmed !== false;
+      return `
+        <div class="entity-confirm-item ${isConfirmed ? 'confirmed' : ''}" data-index="${index}">
+          <span>${entityObj.entity_id} - ${entityObj.friendly_name || entityObj.entity_id}</span>
+          <button class="entity-action-btn" data-action="${isConfirmed ? 'remove' : 'add'}" data-index="${index}">
+            ${isConfirmed ? '✓' : '+'}
+          </button>
+        </div>
+      `;
+    }).join('');
+    
+    return `
+      <div class="entity-confirm-card">
+        <div class="entity-confirm-header">
+          <span>🔍</span>
+          <span>Detected Entities</span>
+        </div>
+        <div class="entity-confirm-list">
+          ${entitiesHtml}
+        </div>
+        <div class="entity-confirm-actions">
+          <button class="confirm-entities-chat-btn">Confirm Selection</button>
+          <button class="skip-entities-chat-btn">Skip</button>
+        </div>
+      </div>
+    `;
+  }
+
+  _createConfigPreviewCard(config, configType) {
+    return `
+      <div class="config-preview-message">
+        <div class="config-preview-header">
+          <span class="config-preview-type">${configType}</span>
+          <span style="color: var(--success-color);">✓ Valid</span>
+        </div>
+        <div class="config-preview-code">
+          <pre>${this._escapeHtml(config)}</pre>
+        </div>
+        <div class="config-preview-actions">
+          <button class="copy-config-btn">Copy</button>
+          <button class="edit-config-btn">Edit</button>
+          <button class="deploy-config-btn primary">Deploy</button>
+        </div>
+      </div>
+    `;
+  }
+
+  async _generateFromChat(prompt, configType, entities) {
+    try {
+      // Show typing indicator
+      this._showTypingIndicator();
+      
+      // Use the existing generation logic but capture the result
+      const debugInfo = {
+        prompt: prompt,
+        type: configType,
+        timestamp: new Date().toISOString(),
+        entities_count: this._entities.length,
+        confirmed_entities: entities
+      };
+
+      const result = await this._hass.callService('ai_config_assistant', 'generate_config', {
+        prompt: prompt,
+        type: configType,
+        entities: entities.map(e => (e.entity || e).entity_id)
+      });
+      
+      // Hide typing indicator
+      this._hideTypingIndicator();
+      
+      if (result && result.config) {
+        // Update debug tab
+        this._updateDebugTab(debugInfo, result.config);
+        
+        // Store configuration in context for refinement
+        this._conversationContext.lastConfig = result.config;
+        this._conversationContext.lastConfigType = configType;
+        this._conversationContext.confirmedEntities = entities;
+        
+        // Add success message
+        this._addChatMessage('assistant', `Great! I've created ${configType === 'lovelace' ? 'a dashboard card' : `a ${configType}`} for you:`);
+        
+        // Add configuration preview
+        this._addChatMessage('config-preview', '', {
+          config: result.config,
+          configType: configType
+        });
+        
+        // Set up event listeners for the new buttons
+        setTimeout(() => this._attachConfigPreviewListeners(), 100);
+        
+        // Add refinement hint
+        this._addChatMessage('system', 'You can refine this configuration by saying things like "also turn on the TV" or "but only on weekdays"');
+      } else {
+        this._addChatMessage('assistant', `I couldn't generate the configuration. Please try again with more details.`);
+      }
+    } catch (error) {
+      this._hideTypingIndicator();
+      this._addChatMessage('assistant', `Error generating configuration: ${error.message}`);
+    }
+  }
+
+  _attachEntityConfirmListeners() {
+    const root = this.shadowRoot;
+    
+    // Entity confirmation buttons
+    root.querySelectorAll('.confirm-entities-chat-btn').forEach(btn => {
+      if (!btn.hasListener) {
+        btn.hasListener = true;
+        btn.addEventListener('click', () => {
+          const confirmedEntities = this._conversationContext.detectedEntities.filter(e => e.confirmed !== false);
+          this._generateFromChat(
+            this._conversationContext.originalPrompt,
+            this._conversationContext.configType,
+            confirmedEntities
+          );
+        });
+      }
+    });
+    
+    root.querySelectorAll('.skip-entities-chat-btn').forEach(btn => {
+      if (!btn.hasListener) {
+        btn.hasListener = true;
+        btn.addEventListener('click', () => {
+          this._generateFromChat(
+            this._conversationContext.originalPrompt,
+            this._conversationContext.configType,
+            []
+          );
+        });
+      }
+    });
+    
+    // Entity action buttons
+    root.querySelectorAll('.entity-action-btn').forEach(btn => {
+      if (!btn.hasListener) {
+        btn.hasListener = true;
+        btn.addEventListener('click', () => {
+          const index = parseInt(btn.dataset.index);
+          const action = btn.dataset.action;
+          
+          if (this._conversationContext.detectedEntities[index]) {
+            if (action === 'add') {
+              this._conversationContext.detectedEntities[index].confirmed = true;
+              btn.textContent = '✓';
+              btn.dataset.action = 'remove';
+              btn.closest('.entity-confirm-item').classList.add('confirmed');
+            } else {
+              this._conversationContext.detectedEntities[index].confirmed = false;
+              btn.textContent = '+';
+              btn.dataset.action = 'add';
+              btn.closest('.entity-confirm-item').classList.remove('confirmed');
+            }
+          }
+        });
+      }
+    });
+  }
+
+  _attachConfigPreviewListeners() {
+    const root = this.shadowRoot;
+    
+    // Copy button
+    root.querySelectorAll('.copy-config-btn').forEach(btn => {
+      if (!btn.hasListener) {
+        btn.hasListener = true;
+        btn.addEventListener('click', async () => {
+          const config = btn.closest('.config-preview-message').querySelector('pre').textContent;
+          await navigator.clipboard.writeText(config);
+          this._addChatMessage('system', 'Configuration copied to clipboard!');
+        });
+      }
+    });
+    
+    // Edit button
+    root.querySelectorAll('.edit-config-btn').forEach(btn => {
+      if (!btn.hasListener) {
+        btn.hasListener = true;
+        btn.addEventListener('click', () => {
+          const config = btn.closest('.config-preview-message').querySelector('pre').textContent;
+          // Switch to validate tab with the config
+          const validateTextarea = root.getElementById('config-yaml');
+          if (validateTextarea) {
+            validateTextarea.value = config;
+            root.querySelector('[data-tab="validate"]').click();
+          }
+        });
+      }
+    });
+    
+    // Deploy button
+    root.querySelectorAll('.deploy-config-btn').forEach(btn => {
+      if (!btn.hasListener) {
+        btn.hasListener = true;
+        btn.addEventListener('click', async () => {
+          const config = btn.closest('.config-preview-message').querySelector('pre').textContent;
+          this._addChatMessage('system', 'Deployment feature coming soon!');
+        });
+      }
+    });
+  }
+
+  _handleQuickAction(action) {
+    const prompts = {
+      automation: 'Create an automation that ',
+      scene: 'Create a scene called ',
+      script: 'Create a script that ',
+      dashboard: 'Create a dashboard card showing '
+    };
+    
+    const root = this.shadowRoot;
+    const chatInput = root.getElementById('chat-input');
+    
+    if (chatInput && prompts[action]) {
+      chatInput.value = prompts[action];
+      chatInput.focus();
+      
+      // Auto-resize
+      chatInput.style.height = 'auto';
+      chatInput.style.height = chatInput.scrollHeight + 'px';
+    }
+  }
+
+  _updateChatStatus(status) {
+    const root = this.shadowRoot;
+    const statusEl = root.querySelector('.chat-status span:last-child');
+    if (statusEl) {
+      statusEl.textContent = status;
+    }
+  }
+
+  _escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
   async _reloadIntegration() {

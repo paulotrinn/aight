@@ -1,7 +1,7 @@
 {
   "domain": "ai_config_assistant",
   "name": "Aight",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "documentation": "https://github.com/toml0006/aight",
   "issue_tracker": "https://github.com/toml0006/aight/issues",
   "dependencies": ["frontend", "http"],
