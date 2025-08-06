@@ -369,7 +369,7 @@ customElements.define('ai-config-panel', class extends HTMLElement {
 
       <div class="container">
         <div class="header">
-          <h1>AI Configuration Assistant</h1>
+          <h1>Aight</h1>
           <div class="status" id="entity-count"></div>
         </div>
 
@@ -486,7 +486,7 @@ customElements.define('ai-config-panel', class extends HTMLElement {
 
         <div class="content" id="help">
           <div class="card">
-            <h3>How to Use AI Configuration Assistant</h3>
+            <h3>How to Use Aight</h3>
             
             <h4>Generate Configurations</h4>
             <p>Use natural language to describe what you want. Examples:</p>

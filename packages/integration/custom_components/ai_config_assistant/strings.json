@@ -2,8 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "AI Configuration Assistant Setup",
-        "description": "Configure your AI Configuration Assistant",
+        "title": "Aight Setup",
+        "description": "Configure Aight - Your AI Configuration Assistant",
         "data": {
           "llm_provider": "LLM Provider",
           "api_key": "API Key"
@@ -28,8 +28,8 @@
   "options": {
     "step": {
       "init": {
-        "title": "AI Configuration Assistant Options",
-        "description": "Update your AI Configuration Assistant settings",
+        "title": "Aight Options",
+        "description": "Update your Aight settings",
         "data": {
           "temperature": "Temperature (0.0 - 2.0)",
           "max_tokens": "Max Tokens (100 - 4000)"

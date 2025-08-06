@@ -53,9 +53,9 @@ EVENT_CONFIG_VALIDATED = f"{DOMAIN}_config_validated"
 EVENT_CONFIG_PREVIEWED = f"{DOMAIN}_config_previewed"
 
 # Panel configuration
-PANEL_NAME = "ai-config"
-PANEL_TITLE = "AI Config Assistant"
-PANEL_ICON = "mdi:robot"
+PANEL_NAME = "aight"
+PANEL_TITLE = "Aight"
+PANEL_ICON = "mdi:star-shooting-outline"
 PANEL_URL = "/ai-config-assistant-frontend/panel.js"
 
 # Default generation parameters

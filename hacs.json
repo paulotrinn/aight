@@ -1,10 +1,10 @@
 {
-  "name": "AI Configuration Assistant",
+  "name": "Aight",
   "hacs": "1.6.0",
   "domains": ["ai_config_assistant"],
   "iot_class": "Cloud Polling",
   "homeassistant": "2025.1.0",
   "render_readme": true,
   "zip_release": true,
-  "filename": "ai_config_assistant_v1.0.0_full.zip"
+  "filename": "aight_v1.0.1.zip"
 }
