@@ -2,7 +2,7 @@
   "name": "Aight",
   "hacs": "1.6.0",
   "domains": ["ai_config_assistant"],
-  "iot_class": "Cloud Polling",
-  "homeassistant": "2024.1.0",
+  "iot_class": "cloud_polling",
+  "homeassistant": "2024.8.0",
   "render_readme": true
 }
