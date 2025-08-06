@@ -591,6 +591,8 @@ customElements.define('ai-config-panel', class extends HTMLElement {
         .chat-send-btn {
           width: 40px;
           height: 40px;
+          min-width: 40px;
+          min-height: 40px;
           border-radius: 50%;
           background: var(--primary-color);
           color: white;
@@ -600,6 +602,7 @@ customElements.define('ai-config-panel', class extends HTMLElement {
           align-items: center;
           justify-content: center;
           transition: all 0.2s;
+          flex-shrink: 0;
         }
 
         .chat-send-btn:hover:not(:disabled) {
@@ -610,6 +613,12 @@ customElements.define('ai-config-panel', class extends HTMLElement {
         .chat-send-btn:disabled {
           opacity: 0.5;
           cursor: not-allowed;
+          transform: none;
+        }
+
+        .chat-send-btn svg {
+          width: 18px;
+          height: 18px;
         }
 
         .chat-quick-actions {
@@ -741,6 +750,57 @@ customElements.define('ai-config-panel', class extends HTMLElement {
           background: var(--primary-color);
           color: white;
           border-color: var(--primary-color);
+        }
+
+        .error-logs-container {
+          margin-top: 8px;
+          background: var(--secondary-background-color);
+          border-radius: 4px;
+          overflow: hidden;
+        }
+
+        .error-logs-toggle {
+          width: 100%;
+          padding: 8px 12px;
+          background: none;
+          border: none;
+          text-align: left;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-size: 12px;
+          color: var(--secondary-text-color);
+          transition: background 0.2s;
+        }
+
+        .error-logs-toggle:hover {
+          background: rgba(0, 0, 0, 0.05);
+        }
+
+        .error-logs-content {
+          padding: 12px;
+          background: var(--card-background-color);
+          border-top: 1px solid var(--divider-color);
+          font-family: 'Roboto Mono', monospace;
+          font-size: 11px;
+          color: var(--error-color);
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          max-height: 200px;
+          overflow-y: auto;
+        }
+
+        .error-logs-content.hidden {
+          display: none;
+        }
+
+        .chevron {
+          transition: transform 0.2s;
+        }
+
+        .chevron.expanded {
+          transform: rotate(90deg);
         }
 
         @media (max-width: 768px) {
@@ -1863,12 +1923,19 @@ entities:
     const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
     if (type === 'user' || type === 'assistant') {
-      messageEl.innerHTML = `
+      let messageContent = `
         <div class="message-bubble">
           <div class="message-content">${this._escapeHtml(content)}</div>
           <div class="message-timestamp">${timestamp}</div>
         </div>
       `;
+      
+      // Add error logs if this is an error message with debug info
+      if (type === 'assistant' && extras.error && extras.debugInfo) {
+        messageContent += this._createErrorLogsCard(extras.error, extras.debugInfo);
+      }
+      
+      messageEl.innerHTML = messageContent;
     } else if (type === 'system') {
       messageEl.innerHTML = `
         <div class="message-bubble">
@@ -1885,6 +1952,11 @@ entities:
     
     // Store message in conversation history
     this._conversationMessages.push({ type, content, timestamp, extras });
+    
+    // Attach error log listeners if they exist
+    if (extras.debugInfo) {
+      setTimeout(() => this._attachErrorLogListeners(), 100);
+    }
     
     // Scroll to bottom
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -2026,13 +2098,34 @@ entities:
         
         setTimeout(() => this._attachConfigPreviewListeners(), 100);
       } else if (result && !result.success) {
-        this._addChatMessage('assistant', `I couldn't refine the configuration: ${result.error || 'Unknown error'}`);
+        this._addChatMessage('assistant', `I couldn't refine the configuration: ${result.error || 'Unknown error'}`, {
+          error: new Error(result.error || 'Unknown error'),
+          debugInfo: {
+            prompt: refinedPrompt,
+            configType: configType,
+            timestamp: new Date().toISOString(),
+            serviceCall: {
+              prompt: refinedPrompt,
+              type: configType,
+              entities: this._conversationContext.confirmedEntities ? this._conversationContext.confirmedEntities.map(e => (e.entity || e).entity_id) : [],
+              return_response: true
+            },
+            serviceResponse: result
+          }
+        });
       } else {
         this._addChatMessage('assistant', `I couldn't refine the configuration. Please try again with more details.`);
       }
     } catch (error) {
       this._hideTypingIndicator();
-      this._addChatMessage('assistant', `Error refining configuration: ${error.message}`);
+      this._addChatMessage('assistant', `Error refining configuration: ${error.message}`, {
+        error: error,
+        debugInfo: {
+          prompt: refinedPrompt || 'Unknown',
+          configType: configType || 'Unknown',
+          timestamp: new Date().toISOString()
+        }
+      });
     }
   }
 
@@ -2167,6 +2260,35 @@ entities:
     `;
   }
 
+  _createErrorLogsCard(error, debugInfo) {
+    const logId = `error-logs-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    
+    return `
+      <div class="error-logs-container">
+        <button class="error-logs-toggle" data-target="${logId}">
+          <span>📋 Error logs</span>
+          <span class="chevron">▶</span>
+        </button>
+        <div id="${logId}" class="error-logs-content hidden">
+Service Call Details:
+${JSON.stringify(debugInfo.serviceCall || {}, null, 2)}
+
+Error Details:
+${error.stack || error.message || error}
+
+Request Context:
+- Timestamp: ${debugInfo.timestamp || 'Unknown'}
+- Prompt: "${debugInfo.prompt || 'Unknown'}"
+- Config Type: ${debugInfo.configType || 'Unknown'}
+- Relevant Domains: ${debugInfo.domains ? debugInfo.domains.join(', ') : 'Unknown'}
+- Entity Count: ${debugInfo.entityCount || 'Unknown'}
+
+Please share this information when reporting issues.
+        </div>
+      </div>
+    `;
+  }
+
   _createConfigPreviewCard(config, configType) {
     return `
       <div class="config-preview-message">
@@ -2187,25 +2309,34 @@ entities:
   }
 
   async _generateFromChat(prompt, configType, entities) {
+    let serviceCall = {};
+    
     try {
       // Show typing indicator
       this._showTypingIndicator();
       
+      // Detect relevant domains for debug info
+      const relevantDomains = this._detectRelevantDomains(prompt);
+      
       // Use the existing generation logic but capture the result
       const debugInfo = {
         prompt: prompt,
-        type: configType,
+        configType: configType,
         timestamp: new Date().toISOString(),
-        entities_count: this._entities.length,
-        confirmed_entities: entities
+        entityCount: this._entities.length,
+        relevantEntityCount: entities.length,
+        domains: relevantDomains,
+        entities: entities.map(e => (e.entity || e).entity_id)
       };
 
-      const result = await this._hass.callService('ai_config_assistant', 'generate_config', {
+      serviceCall = {
         prompt: prompt,
         type: configType,
         entities: entities.map(e => (e.entity || e).entity_id),
         return_response: true
-      });
+      };
+
+      const result = await this._hass.callService('ai_config_assistant', 'generate_config', serviceCall);
       
       // Hide typing indicator
       this._hideTypingIndicator();
@@ -2234,7 +2365,14 @@ entities:
         // Add refinement hint
         this._addChatMessage('system', 'You can refine this configuration by saying things like "also turn on the TV" or "but only on weekdays"');
       } else if (result && !result.success) {
-        this._addChatMessage('assistant', `I couldn't generate the configuration: ${result.error || 'Unknown error'}`);
+        this._addChatMessage('assistant', `I couldn't generate the configuration: ${result.error || 'Unknown error'}`, {
+          error: new Error(result.error || 'Unknown error'),
+          debugInfo: {
+            ...debugInfo,
+            serviceCall: serviceCall,
+            serviceResponse: result
+          }
+        });
       } else {
         // Fallback for when service doesn't return data (older HA versions)
         this._addChatMessage('assistant', `Configuration request sent. For older Home Assistant versions, check the logs for the generated configuration.`);
@@ -2253,7 +2391,21 @@ entities:
       }
     } catch (error) {
       this._hideTypingIndicator();
-      this._addChatMessage('assistant', `Error generating configuration: ${error.message}`);
+      
+      const debugInfo = {
+        prompt: prompt,
+        configType: configType,
+        timestamp: new Date().toISOString(),
+        entityCount: this._entities ? this._entities.length : 0,
+        relevantEntityCount: entities ? entities.length : 0,
+        domains: this._detectRelevantDomains(prompt),
+        serviceCall: serviceCall
+      };
+      
+      this._addChatMessage('assistant', `Error generating configuration: ${error.message}`, {
+        error: error,
+        debugInfo: debugInfo
+      });
     }
   }
 
@@ -2307,6 +2459,36 @@ entities:
               btn.textContent = '+';
               btn.dataset.action = 'add';
               btn.closest('.entity-confirm-item').classList.remove('confirmed');
+            }
+          }
+        });
+      }
+    });
+  }
+
+  _attachErrorLogListeners() {
+    const root = this.shadowRoot;
+    
+    // Error log toggle buttons
+    root.querySelectorAll('.error-logs-toggle').forEach(btn => {
+      if (!btn.hasListener) {
+        btn.hasListener = true;
+        btn.addEventListener('click', () => {
+          const targetId = btn.dataset.target;
+          const content = root.getElementById(targetId);
+          const chevron = btn.querySelector('.chevron');
+          
+          if (content && chevron) {
+            const isHidden = content.classList.contains('hidden');
+            
+            if (isHidden) {
+              content.classList.remove('hidden');
+              chevron.classList.add('expanded');
+              chevron.textContent = '▼';
+            } else {
+              content.classList.add('hidden');
+              chevron.classList.remove('expanded');
+              chevron.textContent = '▶';
             }
           }
         });
