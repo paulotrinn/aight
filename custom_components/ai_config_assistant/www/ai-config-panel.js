@@ -374,6 +374,82 @@ customElements.define('ai-config-panel', class extends HTMLElement {
           transform: scale(1.05);
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
+
+        .detected-entity {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 12px;
+          margin: 8px 0;
+          background: var(--secondary-background-color);
+          border: 1px solid var(--divider-color);
+          border-radius: 6px;
+          transition: background 0.2s;
+        }
+
+        .detected-entity:hover {
+          background: var(--card-background-color);
+        }
+
+        .detected-entity.confirmed {
+          border-color: var(--success-color, #4caf50);
+          background: rgba(76, 175, 80, 0.1);
+        }
+
+        .detected-entity.rejected {
+          border-color: var(--error-color, #f44336);
+          background: rgba(244, 67, 54, 0.1);
+        }
+
+        .entity-match-info {
+          flex-grow: 1;
+        }
+
+        .entity-match-name {
+          font-weight: 500;
+          margin-bottom: 4px;
+        }
+
+        .entity-match-details {
+          font-size: 12px;
+          color: var(--secondary-text-color);
+        }
+
+        .entity-actions {
+          display: flex;
+          gap: 8px;
+        }
+
+        .entity-action-btn {
+          padding: 4px 8px;
+          font-size: 12px;
+          border: none;
+          border-radius: 3px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .entity-action-btn.confirm {
+          background: var(--success-color, #4caf50);
+          color: white;
+        }
+
+        .entity-action-btn.reject {
+          background: var(--error-color, #f44336);
+          color: white;
+        }
+
+        .entity-action-btn.change {
+          background: var(--warning-color, #ff9800);
+          color: white;
+        }
+
+        .detected-word {
+          background: rgba(3, 169, 244, 0.2);
+          padding: 2px 4px;
+          border-radius: 3px;
+          font-weight: 500;
+        }
       </style>
 
       <div class="container">
@@ -424,6 +500,18 @@ customElements.define('ai-config-panel', class extends HTMLElement {
             <div class="button-group">
               <button id="generate-btn">Generate Configuration</button>
               <button id="clear-btn" class="secondary">Clear</button>
+            </div>
+          </div>
+
+          <div class="output-section" id="entity-detection" style="display: none;">
+            <div class="card">
+              <h3>🔍 Detected Entities</h3>
+              <p>I found these entities based on your description. Please confirm or modify them:</p>
+              <div id="detected-entities-list"></div>
+              <div class="button-group">
+                <button id="confirm-entities-btn">✓ Confirm & Generate</button>
+                <button id="skip-detection-btn" class="secondary">Skip Detection</button>
+              </div>
             </div>
           </div>
 
@@ -684,6 +772,29 @@ customElements.define('ai-config-panel', class extends HTMLElement {
     if (reloadBtn) {
       reloadBtn.addEventListener('click', () => this._reloadIntegration());
     }
+
+    // Entity detection buttons
+    const confirmEntitiesBtn = root.getElementById('confirm-entities-btn');
+    if (confirmEntitiesBtn) {
+      confirmEntitiesBtn.addEventListener('click', () => this._confirmDetectedEntities());
+    }
+
+    const skipDetectionBtn = root.getElementById('skip-detection-btn');
+    if (skipDetectionBtn) {
+      skipDetectionBtn.addEventListener('click', () => this._skipEntityDetection());
+    }
+  }
+
+  _confirmDetectedEntities() {
+    const confirmedEntities = this._detectedEntities
+      .filter(detection => detection.confirmed)
+      .map(detection => detection.entity);
+    
+    this._proceedWithGeneration(this._currentPrompt, this._currentConfigType, confirmedEntities);
+  }
+
+  _skipEntityDetection() {
+    this._proceedWithGeneration(this._currentPrompt, this._currentConfigType, []);
   }
 
   async _loadEntities() {
@@ -717,7 +828,30 @@ customElements.define('ai-config-panel', class extends HTMLElement {
 
     const generateBtn = root.getElementById('generate-btn');
     generateBtn.disabled = true;
-    generateBtn.innerHTML = '<span class="loading"></span> Generating...';
+    generateBtn.innerHTML = '<span class="loading"></span> Analyzing...';
+
+    try {
+      // First, detect entities in the prompt
+      const detectedEntities = this._detectEntitiesInPrompt(prompt);
+      
+      if (detectedEntities.length > 0) {
+        // Show entity detection interface
+        this._showEntityDetection(detectedEntities, prompt, configType);
+      } else {
+        // No entities detected, proceed with normal generation
+        this._proceedWithGeneration(prompt, configType);
+      }
+      
+    } catch (error) {
+      this._showMessage('Error: ' + error.message, 'error');
+    } finally {
+      generateBtn.disabled = false;
+      generateBtn.innerHTML = 'Generate Configuration';
+    }
+  }
+
+  async _proceedWithGeneration(prompt, configType, confirmedEntities = []) {
+    const root = this.shadowRoot;
 
     try {
       // Store debug info for the debug tab
@@ -725,32 +859,37 @@ customElements.define('ai-config-panel', class extends HTMLElement {
         prompt: prompt,
         type: configType,
         timestamp: new Date().toISOString(),
-        entities_count: this._entities.length
+        entities_count: this._entities.length,
+        confirmed_entities: confirmedEntities
       };
 
       await this._hass.callService('ai_config_assistant', 'generate_config', {
         prompt: prompt,
-        type: configType
+        type: configType,
+        entities: confirmedEntities.map(e => e.entity_id) // Pass confirmed entity IDs
       });
 
+      // Hide entity detection and show output
+      root.getElementById('entity-detection').style.display = 'none';
       root.getElementById('generate-output').style.display = 'block';
       
       this._showMessage('Configuration generated! The result will appear in the logs.', 'success');
       
       // For now, show a sample configuration
-      const sampleConfig = this._getSampleConfig(configType, prompt);
+      const sampleConfig = this._getSampleConfig(configType, prompt, confirmedEntities);
       root.getElementById('generated-config').textContent = sampleConfig;
       
-      root.getElementById('explanation').innerHTML = '<div class="message info">Check Home Assistant logs for the actual AI-generated configuration.</div>';
+      let explanation = '<div class="message info">Check Home Assistant logs for the actual AI-generated configuration.</div>';
+      if (confirmedEntities.length > 0) {
+        explanation += `<div class="message success">Using ${confirmedEntities.length} confirmed entities: ${confirmedEntities.map(e => e.entity_id).join(', ')}</div>`;
+      }
+      root.getElementById('explanation').innerHTML = explanation;
       
-      // Update debug tab with mock data (since we can't easily capture real LLM calls from frontend)
+      // Update debug tab with mock data
       this._updateDebugTab(debugInfo, sampleConfig);
       
     } catch (error) {
       this._showMessage('Error: ' + error.message, 'error');
-    } finally {
-      generateBtn.disabled = false;
-      generateBtn.innerHTML = 'Generate Configuration';
     }
   }
 
@@ -999,22 +1138,28 @@ customElements.define('ai-config-panel', class extends HTMLElement {
     setTimeout(() => msg.remove(), 5000);
   }
 
-  _getSampleConfig(type, prompt) {
+  _getSampleConfig(type, prompt, confirmedEntities = []) {
+    // Use confirmed entities in sample configurations
+    const firstEntity = confirmedEntities.length > 0 ? confirmedEntities[0].entity_id : 'entity.example';
+    const allEntities = confirmedEntities.length > 0 ? 
+      confirmedEntities.map(e => e.entity_id).join(', ') : 
+      'entity.example';
+
     // Return sample configurations based on type
     const samples = {
       automation: `alias: Generated Automation
 description: "${prompt}"
 trigger:
   - platform: state
-    entity_id: binary_sensor.motion_sensor
+    entity_id: ${firstEntity}
     to: 'on'
 condition:
   - condition: sun
     after: sunset
 action:
-  - service: light.turn_on
+  - service: homeassistant.turn_on
     target:
-      entity_id: light.living_room`,
+      entity_id: ${confirmedEntities.length > 0 ? confirmedEntities.filter(e => e.entity_id.startsWith('light.')).map(e => e.entity_id).join(', ') || firstEntity : 'light.example'}`,
       
       script: `alias: Generated Script
 sequence:
@@ -1050,6 +1195,160 @@ entities:
     };
     
     return samples[type] || '# Generated configuration will appear here';
+  }
+
+  _detectEntitiesInPrompt(prompt) {
+    if (!this._entities || this._entities.length === 0) {
+      return [];
+    }
+
+    const detectedEntities = [];
+    const promptLower = prompt.toLowerCase();
+    const words = promptLower.split(/\s+/);
+
+    // Common location keywords and device types
+    const locationKeywords = ['kitchen', 'bedroom', 'living room', 'bathroom', 'garage', 'office', 'dining room', 'hallway', 'basement', 'attic', 'gym', 'porch', 'deck', 'patio', 'upstairs', 'downstairs'];
+    const deviceKeywords = ['light', 'lights', 'lamp', 'switch', 'outlet', 'fan', 'thermostat', 'lock', 'door', 'window', 'sensor', 'camera', 'speaker', 'tv', 'television', 'dimmer'];
+
+    // Find location and device mentions
+    const mentionedLocations = locationKeywords.filter(location => 
+      promptLower.includes(location)
+    );
+
+    const mentionedDevices = deviceKeywords.filter(device => 
+      promptLower.includes(device)
+    );
+
+    // Search for entities that match location + device combinations
+    this._entities.forEach(entity => {
+      const entityId = entity.entity_id.toLowerCase();
+      const friendlyName = entity.friendly_name.toLowerCase();
+      
+      let matchScore = 0;
+      let matchReasons = [];
+
+      // Check for location matches in entity ID or friendly name
+      mentionedLocations.forEach(location => {
+        if (entityId.includes(location) || friendlyName.includes(location)) {
+          matchScore += 3;
+          matchReasons.push(`location: "${location}"`);
+        }
+      });
+
+      // Check for device type matches
+      mentionedDevices.forEach(device => {
+        const entityDomain = entityId.split('.')[0];
+        
+        // Direct domain matches
+        if ((device === 'light' || device === 'lights') && entityDomain === 'light') {
+          matchScore += 2;
+          matchReasons.push(`device type: "${device}"`);
+        } else if (device === 'switch' && entityDomain === 'switch') {
+          matchScore += 2;
+          matchReasons.push(`device type: "${device}"`);
+        } else if (device === 'fan' && entityDomain === 'fan') {
+          matchScore += 2;
+          matchReasons.push(`device type: "${device}"`);
+        } else if ((device === 'sensor') && (entityDomain === 'sensor' || entityDomain === 'binary_sensor')) {
+          matchScore += 2;
+          matchReasons.push(`device type: "${device}"`);
+        }
+        
+        // Check friendly name for device mentions
+        if (friendlyName.includes(device)) {
+          matchScore += 1;
+          matchReasons.push(`name contains: "${device}"`);
+        }
+      });
+
+      // Check for direct name mentions (fuzzy matching)
+      words.forEach(word => {
+        if (word.length > 2) { // Skip very short words
+          if (entityId.includes(word) || friendlyName.includes(word)) {
+            matchScore += 1;
+            matchReasons.push(`name match: "${word}"`);
+          }
+        }
+      });
+
+      // If we have a decent match score, include this entity
+      if (matchScore >= 2) {
+        detectedEntities.push({
+          entity: entity,
+          score: matchScore,
+          reasons: matchReasons,
+          confirmed: false
+        });
+      }
+    });
+
+    // Sort by match score (highest first) and limit results
+    detectedEntities.sort((a, b) => b.score - a.score);
+    return detectedEntities.slice(0, 8); // Limit to top 8 matches
+  }
+
+  _showEntityDetection(detectedEntities, prompt, configType) {
+    const root = this.shadowRoot;
+    
+    // Store the context for later use
+    this._currentPrompt = prompt;
+    this._currentConfigType = configType;
+    this._detectedEntities = detectedEntities;
+
+    // Generate the entity list HTML
+    const entitiesHtml = detectedEntities.map((detection, index) => {
+      const entity = detection.entity;
+      const reasonsText = detection.reasons.join(', ');
+      
+      return `
+        <div class="detected-entity" data-index="${index}">
+          <div class="entity-match-info">
+            <div class="entity-match-name">${entity.entity_id}</div>
+            <div class="entity-match-details">
+              <strong>${entity.friendly_name}</strong> (${entity.state})<br>
+              <em>Matched by: ${reasonsText}</em>
+            </div>
+          </div>
+          <div class="entity-actions">
+            <button class="entity-action-btn confirm" data-action="confirm" data-index="${index}">✓</button>
+            <button class="entity-action-btn reject" data-action="reject" data-index="${index}">✗</button>
+            <button class="entity-action-btn change" data-action="change" data-index="${index}">↻</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Update the UI
+    root.getElementById('detected-entities-list').innerHTML = entitiesHtml;
+    root.getElementById('entity-detection').style.display = 'block';
+    root.getElementById('generate-output').style.display = 'none';
+
+    // Add event listeners for entity actions
+    root.querySelectorAll('.entity-action-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const action = e.target.dataset.action;
+        const index = parseInt(e.target.dataset.index);
+        this._handleEntityAction(action, index);
+      });
+    });
+  }
+
+  _handleEntityAction(action, index) {
+    const detection = this._detectedEntities[index];
+    const entityDiv = this.shadowRoot.querySelector(`[data-index="${index}"]`);
+    
+    if (action === 'confirm') {
+      detection.confirmed = true;
+      entityDiv.classList.add('confirmed');
+      entityDiv.classList.remove('rejected');
+    } else if (action === 'reject') {
+      detection.confirmed = false;
+      entityDiv.classList.add('rejected');
+      entityDiv.classList.remove('confirmed');
+    } else if (action === 'change') {
+      // TODO: Implement entity picker for replacement
+      this._showMessage('Entity replacement coming soon!', 'info');
+    }
   }
 
   async _reloadIntegration() {
