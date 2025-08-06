@@ -883,9 +883,15 @@ customElements.define('ai-config-panel', class extends HTMLElement {
     const root = this.shadowRoot;
     const suggestionsDiv = root.getElementById('entity-suggestions');
 
+    // Handle edge cases where text might be undefined or null
+    if (!text || typeof text !== 'string') {
+      suggestionsDiv.classList.remove('show');
+      return;
+    }
+
     // More flexible pattern to catch entity typing
     const words = text.split(/\s+/);
-    const lastWord = words[words.length - 1];
+    const lastWord = words[words.length - 1] || '';
     
     // Check if the last word looks like an entity being typed
     if (lastWord.includes('.') && this._entities.length > 0) {
@@ -903,20 +909,25 @@ customElements.define('ai-config-panel', class extends HTMLElement {
           // Domain must match and entity part should contain the query substring
           if (entityParts[0] !== domain) return false;
           if (entityPart === '') return true; // Show all entities for just "domain."
-          return entityParts[1].includes(entityPart);
+          return entityParts.length > 1 && entityParts[1].includes(entityPart);
         })
         .sort((a, b) => {
           // Sort by relevance: starts with query first, then contains query
           const aId = a.entity_id.toLowerCase();
           const bId = b.entity_id.toLowerCase();
-          const aEntityPart = aId.split('.')[1];
-          const bEntityPart = bId.split('.')[1];
+          const aParts = aId.split('.');
+          const bParts = bId.split('.');
+          const aEntityPart = aParts.length > 1 ? aParts[1] : '';
+          const bEntityPart = bParts.length > 1 ? bParts[1] : '';
           
-          const aStartsWith = aEntityPart.startsWith(entityPart);
-          const bStartsWith = bEntityPart.startsWith(entityPart);
-          
-          if (aStartsWith && !bStartsWith) return -1;
-          if (!aStartsWith && bStartsWith) return 1;
+          // Only check startsWith if entityPart is not empty
+          if (entityPart) {
+            const aStartsWith = aEntityPart.startsWith(entityPart);
+            const bStartsWith = bEntityPart.startsWith(entityPart);
+            
+            if (aStartsWith && !bStartsWith) return -1;
+            if (!aStartsWith && bStartsWith) return 1;
+          }
           
           // Then alphabetical
           return aId.localeCompare(bId);
@@ -926,10 +937,17 @@ customElements.define('ai-config-panel', class extends HTMLElement {
       if (suggestions.length > 0) {
         suggestionsDiv.innerHTML = suggestions.map(entity => {
           const entityParts = entity.entity_id.split('.');
-          const highlightedName = entity.entity_id.replace(
-            new RegExp(`(${entityPart})`, 'gi'), 
-            '<strong>$1</strong>'
-          );
+          let highlightedName = entity.entity_id;
+          
+          // Only highlight if entityPart exists and is not empty
+          if (entityPart && entityPart.length > 0) {
+            // Escape special regex characters in entityPart
+            const escapedEntityPart = entityPart.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            highlightedName = entity.entity_id.replace(
+              new RegExp(`(${escapedEntityPart})`, 'gi'), 
+              '<strong>$1</strong>'
+            );
+          }
           
           return '<div class="entity-suggestion" data-entity="' + entity.entity_id + '">' +
             '<div class="entity-name">' + highlightedName + '</div>' +
