@@ -28,13 +28,13 @@ jobs:
 
       - name: Validate Python files
         run: |
-          python -m py_compile custom_components/ai_config_assistant/*.py
+          python -m py_compile packages/integration/custom_components/ai_config_assistant/*.py
 
       - name: Validate manifest
         run: |
           python -c "
           import json
-          with open('custom_components/ai_config_assistant/manifest.json') as f:
+          with open('packages/integration/custom_components/ai_config_assistant/manifest.json') as f:
               manifest = json.load(f)
           print('Manifest validation passed')
           "
