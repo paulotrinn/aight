@@ -81,8 +81,7 @@ class EntityManager:
         self._search_index.clear()
 
         # Process all entities
-        for state in self.hass.states.async_all():
-            entity_id = state.entity_id
+        for entity_id, state in self.hass.states.async_all_by_entity_id().items():
             domain = entity_id.split('.')[0]
             
             # Skip excluded domains

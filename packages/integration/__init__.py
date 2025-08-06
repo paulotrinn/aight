@@ -45,41 +45,43 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the AI Config Assistant integration."""
     hass.data.setdefault(DOMAIN, {})
     
-    # Basic setup only - actual initialization happens in async_setup_entry
-    _LOGGER.info("AI Configuration Assistant integration setup")
+    # Initialize core components
+    hass.data[DOMAIN]["llm_client"] = LLMClientManager(hass)
+    hass.data[DOMAIN]["config_generator"] = ConfigGenerator(hass)
+    hass.data[DOMAIN]["entity_manager"] = EntityManager(hass)
+    
+    # Initialize entity manager
+    await hass.data[DOMAIN]["entity_manager"].initialize()
+    
+    # Set up config generator
+    hass.data[DOMAIN]["config_generator"].setup(
+        hass.data[DOMAIN]["llm_client"],
+        hass.data[DOMAIN]["entity_manager"]
+    )
+    
+    # Register services
+    await _async_register_services(hass)
+    
+    # Register API endpoints
+    await async_register_api_views(hass)
+    
+    # Register frontend panel
+    await async_register_panel(hass)
+    
+    # Register frontend resources
+    hass.http.register_static_path(
+        "/ai-config-assistant-frontend",
+        hass.config.path("www"),
+        cache_headers=False,
+    )
+    
+    _LOGGER.info("AI Configuration Assistant integration initialized")
     return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up AI Config Assistant from a config entry."""
-    # Ensure domain data exists
-    hass.data.setdefault(DOMAIN, {})
-    
     # Store config entry data
     hass.data[DOMAIN]["config_entry"] = entry
-    
-    # Initialize core components if not already done
-    if "llm_client" not in hass.data[DOMAIN]:
-        hass.data[DOMAIN]["llm_client"] = LLMClientManager(hass)
-        hass.data[DOMAIN]["config_generator"] = ConfigGenerator(hass)
-        hass.data[DOMAIN]["entity_manager"] = EntityManager(hass)
-        
-        # Initialize entity manager
-        await hass.data[DOMAIN]["entity_manager"].initialize()
-        
-        # Set up config generator
-        hass.data[DOMAIN]["config_generator"].setup(
-            hass.data[DOMAIN]["llm_client"],
-            hass.data[DOMAIN]["entity_manager"]
-        )
-        
-        # Register services
-        await _async_register_services(hass)
-        
-        # Register API endpoints
-        await async_register_api_views(hass)
-        
-        # Register frontend panel
-        await async_register_panel(hass)
     
     # Initialize LLM client with config
     llm_client = hass.data[DOMAIN]["llm_client"]
@@ -89,7 +91,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         default_model=entry.data.get(CONF_DEFAULT_MODEL),
     )
     
-    _LOGGER.info("AI Configuration Assistant integration loaded successfully")
     return True
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -104,31 +104,37 @@ class AIConfigAssistantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _test_api_key(self, provider: str, api_key: str) -> bool:
         """Test the API key for the specified provider."""
-        # For now, we'll just do basic validation and skip API testing
-        # to avoid issues with rate limits, network issues, etc.
-        # The actual API key will be validated when the user tries to use the service
-        
-        _LOGGER.info("Validating API key format for provider %s", provider)
-        
-        # Basic validation - just check if the key looks reasonable
-        if not api_key or len(api_key.strip()) < 10:
-            _LOGGER.warning("API key appears too short for provider %s", provider)
-            return False
+        try:
+            # Import litellm for testing
+            import litellm
             
-        # Provider-specific format validation
-        if provider == "openai":
-            # OpenAI keys typically start with "sk-"
-            if not api_key.startswith("sk-"):
-                _LOGGER.warning("OpenAI API key should start with 'sk-'")
-                # Still allow it as OpenAI may change formats
-        elif provider == "anthropic":
-            # Anthropic keys typically start with "sk-ant-"
-            if not api_key.startswith("sk-"):
-                _LOGGER.warning("Anthropic API key should start with 'sk-'")
-                # Still allow it
-                
-        _LOGGER.info("API key format accepted for provider %s", provider)
-        return True
+            # Set the API key for the provider
+            if provider == "openai":
+                litellm.openai_key = api_key
+                model = "gpt-3.5-turbo"
+            elif provider == "anthropic":
+                litellm.anthropic_key = api_key
+                model = "claude-3-haiku-20240307"
+            elif provider == "google":
+                litellm.vertex_ai_key = api_key
+                model = "gemini-pro"
+            else:
+                # For other providers, assume it's valid
+                return True
+
+            # Make a simple test call
+            response = await litellm.acompletion(
+                model=model,
+                messages=[{"role": "user", "content": "Hello"}],
+                max_tokens=5,
+                timeout=10,
+            )
+            
+            return response is not None and hasattr(response, 'choices')
+            
+        except Exception as err:
+            _LOGGER.debug("API key test failed: %s", err)
+            return False
 
     @staticmethod
     @callback

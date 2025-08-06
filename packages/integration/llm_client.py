@@ -2,7 +2,6 @@
 import logging
 from typing import Any, Dict, List, Optional, Union
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 
 from homeassistant.core import HomeAssistant
@@ -56,49 +55,34 @@ class LLMClientManager:
         self._api_key = api_key
         self._default_model = default_model or DEFAULT_MODELS.get(provider)
         
-        # Import litellm dynamically in a thread to avoid blocking
-        loop = asyncio.get_event_loop()
-        
-        def _import_litellm():
-            """Import litellm in thread executor."""
-            try:
-                import litellm
-                return litellm
-            except ImportError as err:
-                _LOGGER.error("Failed to import litellm: %s", err)
-                raise
-        
+        # Import litellm dynamically
         try:
-            with ThreadPoolExecutor(max_workers=1) as executor:
-                self._litellm = await loop.run_in_executor(executor, _import_litellm)
+            import litellm
+            self._litellm = litellm
             
             # Configure the provider
             await self._configure_provider(provider, api_key)
             
             _LOGGER.info("LLM client setup completed for provider: %s", provider)
             
+        except ImportError as err:
+            _LOGGER.error("Failed to import litellm: %s", err)
+            raise
         except Exception as err:
             _LOGGER.error("Failed to setup LLM client: %s", err)
             raise
 
     async def _configure_provider(self, provider: str, api_key: str) -> None:
         """Configure the specific LLM provider."""
-        import os
-        
         if provider == "openai":
-            os.environ["OPENAI_API_KEY"] = api_key
             self._litellm.openai_key = api_key
         elif provider == "anthropic":
-            os.environ["ANTHROPIC_API_KEY"] = api_key
             self._litellm.anthropic_key = api_key
         elif provider == "google":
-            os.environ["GEMINI_API_KEY"] = api_key
             self._litellm.vertex_ai_key = api_key
         elif provider == "mistral":
-            os.environ["MISTRAL_API_KEY"] = api_key
             self._litellm.mistral_key = api_key
         elif provider == "groq":
-            os.environ["GROQ_API_KEY"] = api_key
             self._litellm.groq_key = api_key
         # Ollama doesn't need API key configuration
         elif provider == "ollama":
@@ -129,27 +113,15 @@ class LLMClientManager:
             for msg in messages
         ]
 
-        def _sync_completion():
-            """Run the synchronous completion in a thread."""
-            try:
-                # Use synchronous completion in thread
-                response = self._litellm.completion(
-                    model=model,
-                    messages=formatted_messages,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                    **kwargs
-                )
-                return response
-            except Exception as err:
-                _LOGGER.error("Error in sync completion: %s", err)
-                raise
-
         try:
-            # Run the blocking API call in a thread executor
-            loop = asyncio.get_event_loop()
-            with ThreadPoolExecutor(max_workers=1) as executor:
-                response = await loop.run_in_executor(executor, _sync_completion)
+            # Make the API call
+            response = await self._litellm.acompletion(
+                model=model,
+                messages=formatted_messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                **kwargs
+            )
 
             # Extract response content
             content = response.choices[0].message.content
@@ -272,13 +244,6 @@ Provide the updated configuration:"""
             **kwargs
         )
 
-    async def cleanup(self) -> None:
-        """Clean up resources."""
-        self._litellm = None
-        self._provider = None
-        self._api_key = None
-        _LOGGER.info("LLM client cleaned up")
-    
     async def get_available_models(self) -> List[str]:
         """Get list of available models for the current provider."""
         if not self._provider:
