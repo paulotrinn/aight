@@ -3,6 +3,12 @@ name: Release
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to create assets for'
+        required: true
+        default: 'v1.0.0'
 
 jobs:
   release:
@@ -13,16 +19,24 @@ jobs:
 
       - name: Create release zip
         run: |
-          cd custom_components/ai_config_assistant
-          zip -r ../../ai-config-assistant.zip . -x "*.pyc" "*__pycache__*"
+          cd packages/integration
+          zip -r ../../ai-config-assistant.zip custom_components/ -x "*.pyc" "*__pycache__*" "*.py[cod]"
           cd ../..
+          
+      - name: Get release
+        id: get_release
+        uses: bruceadams/get-release@v1.3.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}
           
       - name: Upload release asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ github.event.release.upload_url }}
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
           asset_path: ./ai-config-assistant.zip
           asset_name: ai-config-assistant.zip
           asset_content_type: application/zip
