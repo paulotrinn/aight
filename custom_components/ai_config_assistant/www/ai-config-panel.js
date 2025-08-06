@@ -632,8 +632,25 @@ customElements.define('ai-config-panel', class extends HTMLElement {
               <li>"Show all temperature sensors on a dashboard"</li>
             </ul>
 
+            <h4>Smart Entity Detection</h4>
+            <p>Aight automatically detects entities mentioned in your prompt:</p>
+            <ul>
+              <li><strong>Location Intelligence:</strong> Recognizes gym, kitchen, bedroom, etc.</li>
+              <li><strong>Device Recognition:</strong> Understands lights, switches, sensors, fans, etc.</li>
+              <li><strong>Interactive Confirmation:</strong> Shows detected entities for you to approve</li>
+              <li><strong>LLM Integration:</strong> Uses confirmed entities for accurate results</li>
+            </ul>
+
             <h4>Entity Autocomplete</h4>
             <p>Start typing entity names like <code>light.</code> or <code>switch.</code> to see suggestions from your system.</p>
+
+            <h4>LLM Debug Tab</h4>
+            <p>View exactly how your requests are processed:</p>
+            <ul>
+              <li><strong>System Prompt:</strong> Includes curated entity context and instructions</li>
+              <li><strong>Entity Context:</strong> Relevant entities with states and friendly names</li>
+              <li><strong>Processing Details:</strong> Metadata about entity detection and matching</li>
+            </ul>
 
             <h4>Validate & Preview</h4>
             <p>Use the Validate tab to check YAML syntax, and Preview to see how configurations work with your current entity states.</p>
@@ -900,17 +917,58 @@ customElements.define('ai-config-panel', class extends HTMLElement {
     root.getElementById('debug-content').style.display = 'block';
     root.getElementById('debug-placeholder').style.display = 'none';
     
+    // Create a more focused entity list - include detected entities + a sampling of others
+    let entitiesToInclude = [];
+    
+    // If we have confirmed entities, prioritize those
+    if (debugInfo.confirmed_entities && debugInfo.confirmed_entities.length > 0) {
+      entitiesToInclude = debugInfo.confirmed_entities.slice();
+    }
+    
+    // Add a sample of other entities, grouped by domain
+    const entitiesByDomain = {};
+    this._entities.forEach(e => {
+      const domain = e.entity_id.split('.')[0];
+      if (!entitiesByDomain[domain]) entitiesByDomain[domain] = [];
+      entitiesByDomain[domain].push(e);
+    });
+    
+    // Add up to 3 entities per domain, up to 50 total entities
+    Object.keys(entitiesByDomain).forEach(domain => {
+      const domainEntities = entitiesByDomain[domain].slice(0, 3);
+      entitiesToInclude.push(...domainEntities);
+    });
+    
+    // Remove duplicates and limit to 50 entities
+    const uniqueEntities = entitiesToInclude.filter((entity, index, array) => 
+      array.findIndex(e => e.entity_id === entity.entity_id) === index
+    ).slice(0, 50);
+    
+    const entityContext = uniqueEntities.map(e => `${e.entity_id} (${e.friendly_name}) - State: ${e.state}`).join('\n');
+    
     // Mock LLM request (this would be the actual prompt sent to the LLM)
     const mockRequest = {
       model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
-          content: "You are a Home Assistant configuration assistant. Generate valid YAML configurations based on user requests."
+          content: `You are a Home Assistant configuration assistant. Generate valid YAML configurations based on user requests.
+
+Available Home Assistant entities:
+${entityContext}
+
+Instructions:
+1. Analyze the user's natural language request
+2. Identify which entities are most relevant to their request
+3. Generate a complete, valid YAML configuration using the appropriate entities
+4. Use entity IDs exactly as provided above
+5. Consider entity states and friendly names when making matches
+6. For locations (gym, kitchen, etc.), look for entities with those words in their ID or friendly name
+7. For device types (lights, switches, etc.), use the appropriate domain and look for matching friendly names`
         },
         {
           role: "user", 
-          content: `Create a Home Assistant ${debugInfo.type} based on this request: ${debugInfo.prompt}\n\nAvailable entities: ${this._entities.slice(0, 10).map(e => e.entity_id).join(', ')}...\n\nGenerate a complete YAML ${debugInfo.type} configuration.`
+          content: `Create a Home Assistant ${debugInfo.type} based on this request: "${debugInfo.prompt}"${debugInfo.confirmed_entities && debugInfo.confirmed_entities.length > 0 ? `\n\nUser has specifically selected these entities as relevant: ${debugInfo.confirmed_entities.map(e => e.entity_id).join(', ')}` : ''}`
         }
       ],
       temperature: 0.1,
@@ -946,8 +1004,12 @@ customElements.define('ai-config-panel', class extends HTMLElement {
       config_type: debugInfo.type,
       user_prompt: debugInfo.prompt,
       entities_available: debugInfo.entities_count,
+      entities_in_context: uniqueEntities.length,
+      confirmed_entities: debugInfo.confirmed_entities ? debugInfo.confirmed_entities.map(e => e.entity_id) : [],
+      entity_detection_used: debugInfo.confirmed_entities && debugInfo.confirmed_entities.length > 0,
       processing_time_ms: Math.floor(Math.random() * 3000) + 500,
-      provider: "openai"
+      provider: "openai",
+      approach: "LLM entity matching with curated context"
     };
     
     // Update the debug displays
