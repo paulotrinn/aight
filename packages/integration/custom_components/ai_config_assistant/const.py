@@ -20,7 +20,7 @@ LLM_PROVIDERS = [
 
 # Default models for each provider
 DEFAULT_MODELS = {
-    "openai": "gpt-4",
+    "openai": "gpt-3.5-turbo",
     "anthropic": "claude-3-sonnet-20240229",
     "google": "gemini-pro",
     "mistral": "mistral-large-latest",
