@@ -5,7 +5,7 @@ from typing import Any, Dict
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -122,21 +122,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _async_register_services(hass: HomeAssistant) -> None:
     """Register AI Config Assistant services."""
     
-    async def generate_config_service(call: ServiceCall) -> None:
+    async def generate_config_service(call: ServiceCall) -> ServiceResponse:
         """Generate configuration from natural language input."""
         config_generator = hass.data[DOMAIN]["config_generator"]
         
         prompt = call.data.get("prompt", "")
         config_type = call.data.get("type", "automation")
         context = call.data.get("context", {})
+        include_entities = call.data.get("entities", [])
         
         try:
             result = await config_generator.generate_config(
                 prompt=prompt,
                 config_type=config_type,
                 context=context,
+                include_entities=include_entities,
             )
             
+            # Fire event for backward compatibility
             hass.bus.async_fire(
                 "ai_config_assistant_config_generated",
                 {
@@ -147,6 +150,14 @@ async def _async_register_services(hass: HomeAssistant) -> None:
                 },
             )
             
+            # Return response for new chat interface
+            return {
+                "success": True,
+                "config": result.config,
+                "explanation": result.explanation,
+                "entities_used": result.entities_used,
+            }
+            
         except Exception as err:
             _LOGGER.error("Error generating config: %s", err)
             hass.bus.async_fire(
@@ -156,6 +167,12 @@ async def _async_register_services(hass: HomeAssistant) -> None:
                     "error": str(err),
                 },
             )
+            
+            # Return error response
+            return {
+                "success": False,
+                "error": str(err),
+            }
     
     async def validate_config_service(call: ServiceCall) -> None:
         """Validate a configuration."""
@@ -253,7 +270,8 @@ async def _async_register_services(hass: HomeAssistant) -> None:
 
     # Register services
     hass.services.async_register(
-        DOMAIN, SERVICE_GENERATE_CONFIG, generate_config_service
+        DOMAIN, SERVICE_GENERATE_CONFIG, generate_config_service,
+        supports_response=SupportsResponse.OPTIONAL
     )
     
     hass.services.async_register(

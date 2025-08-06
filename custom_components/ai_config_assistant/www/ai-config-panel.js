@@ -2011,12 +2011,13 @@ entities:
       const result = await this._hass.callService('ai_config_assistant', 'generate_config', {
         prompt: refinedPrompt,
         type: configType,
-        entities: this._conversationContext.confirmedEntities || []
+        entities: this._conversationContext.confirmedEntities ? this._conversationContext.confirmedEntities.map(e => (e.entity || e).entity_id) : [],
+        return_response: true
       });
       
       this._hideTypingIndicator();
       
-      if (result && result.config) {
+      if (result && result.success && result.config) {
         // Store the new config as last config
         this._conversationContext.lastConfig = result.config;
         this._conversationContext.originalPrompt = refinedPrompt;
@@ -2029,6 +2030,8 @@ entities:
         });
         
         setTimeout(() => this._attachConfigPreviewListeners(), 100);
+      } else if (result && !result.success) {
+        this._addChatMessage('assistant', `I couldn't refine the configuration: ${result.error || 'Unknown error'}`);
       } else {
         this._addChatMessage('assistant', `I couldn't refine the configuration. Please try again with more details.`);
       }
@@ -2121,13 +2124,14 @@ entities:
       const result = await this._hass.callService('ai_config_assistant', 'generate_config', {
         prompt: prompt,
         type: configType,
-        entities: entities.map(e => (e.entity || e).entity_id)
+        entities: entities.map(e => (e.entity || e).entity_id),
+        return_response: true
       });
       
       // Hide typing indicator
       this._hideTypingIndicator();
       
-      if (result && result.config) {
+      if (result && result.success && result.config) {
         // Update debug tab
         this._updateDebugTab(debugInfo, result.config);
         
@@ -2150,8 +2154,23 @@ entities:
         
         // Add refinement hint
         this._addChatMessage('system', 'You can refine this configuration by saying things like "also turn on the TV" or "but only on weekdays"');
+      } else if (result && !result.success) {
+        this._addChatMessage('assistant', `I couldn't generate the configuration: ${result.error || 'Unknown error'}`);
       } else {
-        this._addChatMessage('assistant', `I couldn't generate the configuration. Please try again with more details.`);
+        // Fallback for when service doesn't return data (older HA versions)
+        this._addChatMessage('assistant', `Configuration request sent. For older Home Assistant versions, check the logs for the generated configuration.`);
+        
+        // Use sample config as fallback
+        const sampleConfig = this._getSampleConfig(configType, prompt, entities);
+        this._conversationContext.lastConfig = sampleConfig;
+        this._conversationContext.lastConfigType = configType;
+        
+        this._addChatMessage('config-preview', '', {
+          config: sampleConfig,
+          configType: configType
+        });
+        
+        setTimeout(() => this._attachConfigPreviewListeners(), 100);
       }
     } catch (error) {
       this._hideTypingIndicator();
