@@ -126,14 +126,17 @@ async def _async_register_services(hass: HomeAssistant) -> None:
     
     async def generate_config_service(call: ServiceCall) -> ServiceResponse:
         """Generate configuration from natural language input."""
-        config_generator = hass.data[DOMAIN]["config_generator"]
-        
-        prompt = call.data.get("prompt", "")
-        config_type = call.data.get("type", "automation")
-        context = call.data.get("context", {})
-        include_entities = call.data.get("entities", [])
-        
         try:
+            _LOGGER.info("Generate config service called with data: %s", call.data)
+            config_generator = hass.data[DOMAIN]["config_generator"]
+            
+            prompt = call.data.get("prompt", "")
+            config_type = call.data.get("type", "automation")
+            context = call.data.get("context", {})
+            include_entities = call.data.get("entities", [])
+            
+            _LOGGER.info("Calling config generator with prompt: %s", prompt)
+            
             result = await config_generator.generate_config(
                 prompt=prompt,
                 config_type=config_type,
@@ -141,27 +144,36 @@ async def _async_register_services(hass: HomeAssistant) -> None:
                 include_entities=include_entities,
             )
             
+            _LOGGER.info("Config generator returned: success=%s", result.success)
+            
             # Fire event for backward compatibility
             hass.bus.async_fire(
                 "ai_config_assistant_config_generated",
                 {
-                    "success": True,
+                    "success": result.success,
                     "config": result.config,
                     "explanation": result.explanation,
                     "entities_used": result.entities_used,
+                    "error": result.warnings[0] if result.warnings and not result.success else None,
                 },
             )
             
             # Return response for new chat interface
-            return {
-                "success": True,
-                "config": result.config,
-                "explanation": result.explanation,
-                "entities_used": result.entities_used,
-            }
+            if result.success:
+                return {
+                    "success": True,
+                    "config": result.config,
+                    "explanation": result.explanation,
+                    "entities_used": result.entities_used,
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": result.warnings[0] if result.warnings else "Configuration generation failed",
+                }
             
         except Exception as err:
-            _LOGGER.error("Error generating config: %s", err)
+            _LOGGER.error("Service call exception: %s", err, exc_info=True)
             hass.bus.async_fire(
                 "ai_config_assistant_config_generated",
                 {
