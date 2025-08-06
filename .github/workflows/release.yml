@@ -20,7 +20,11 @@ jobs:
       - name: Create release zip
         run: |
           cd packages/integration
-          zip -r ../../ai-config-assistant.zip custom_components/ -x "*.pyc" "*__pycache__*" "*.py[cod]"
+          # Create translations directory
+          mkdir -p custom_components/ai_config_assistant/translations
+          cp custom_components/ai_config_assistant/strings.json custom_components/ai_config_assistant/translations/en.json
+          # Create ZIP with all necessary files
+          zip -r ../../ai-config-assistant.zip custom_components/ www/ -x "*.pyc" "*__pycache__*" "*.py[cod]" ".DS_Store"
           cd ../..
           
       - name: Get release
