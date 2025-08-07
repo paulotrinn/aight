@@ -124,11 +124,37 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _async_register_services(hass: HomeAssistant) -> None:
     """Register AI Config Assistant services."""
     
-    async def generate_config_service(call: ServiceCall) -> ServiceResponse:
+    async def generate_config_service(call: ServiceCall) -> ServiceResponse | None:
         """Generate configuration from natural language input."""
+        # Log the service call for debugging
+        _LOGGER.info("Generate config service called with data: %s", call.data)
+        _LOGGER.info("Return response requested: %s", call.return_response)
+        
+        # TEMPORARY: Always return a test response to debug the issue
+        if call.return_response:
+            test_response = {
+                "success": False,
+                "error": "Service is running but LLM backend not responding. Check logs for details.",
+                "debug": "This is a test response to verify service communication"
+            }
+            _LOGGER.info("Returning test response: %s", test_response)
+            return test_response
+        
+        # Only return data if return_response is True
+        if not call.return_response:
+            _LOGGER.info("No return response requested, executing without returning data")
+            return None
+        
+        # Test: Return a simple response immediately to check if the service response works
+        if call.data.get("test_mode"):
+            _LOGGER.info("Test mode - returning test response")
+            return {"success": True, "message": "Test response working"}
+        
         try:
-            _LOGGER.info("Generate config service called with data: %s", call.data)
-            config_generator = hass.data[DOMAIN]["config_generator"]
+            config_generator = hass.data[DOMAIN].get("config_generator")
+            if not config_generator:
+                _LOGGER.error("Config generator not initialized")
+                return {"success": False, "error": "Config generator not initialized"}
             
             prompt = call.data.get("prompt", "")
             config_type = call.data.get("type", "automation")
@@ -172,7 +198,7 @@ async def _async_register_services(hass: HomeAssistant) -> None:
                     "error": result.warnings[0] if result.warnings else "Configuration generation failed",
                 }
             
-            _LOGGER.info("Returning response: %s", response_data)
+            _LOGGER.info("Returning response: %s", response_data.get("success", "unknown"))
             return response_data
             
         except Exception as err:
