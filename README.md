@@ -1,6 +1,6 @@
 # Aight - AI Configuration Assistant for Home Assistant
 
-🚀 **v1.3.7** - The most advanced Home Assistant AI configuration tool with **conversational chat interface**!
+🚀 **v1.3.8** - The most advanced Home Assistant AI configuration tool with **conversational chat interface**!
 
 📖 **[Documentation & Demo](https://toml0006.github.io/aight/)** | 📦 **[Download Latest](https://github.com/toml0006/aight/releases/latest)** | 💬 **[Community](https://github.com/toml0006/aight/discussions)**
 
@@ -35,9 +35,9 @@
 
 ### 🚀 Quick Install - Latest Version
 
-[![Download Latest Version](https://img.shields.io/badge/Download-v1.3.7%20Latest-success?style=for-the-badge&logo=homeassistant)](https://github.com/toml0006/aight/releases/latest/download/aight.zip)
+[![Download Latest Version](https://img.shields.io/badge/Download-v1.3.8%20Latest-success?style=for-the-badge&logo=homeassistant)](https://github.com/toml0006/aight/releases/latest/download/aight.zip)
 
-**v1.3.7** includes the revolutionary **conversational chat interface**:
+**v1.3.8** includes the revolutionary **conversational chat interface**:
 - 💬 Natural chat experience - just type what you want!
 - 🎯 Automatic entity detection - no manual selection needed
 - 🚀 One-click deployment to Home Assistant
@@ -298,7 +298,15 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 ## 📝 Changelog
 
-### v1.3.7 (Latest) - Critical Fix for HA 2025.7
+### v1.3.8 (Latest) - Full LLM Functionality Restored
+- ✅ Removed test response and restored actual AI configuration generation
+- 🆕 Added OpenRouter provider support with proper API configuration  
+- 🔇 Improved service logging to be less verbose while maintaining debugging
+- 🔧 Fixed service response detection works perfectly with HA 2025.7
+- 🛠️ Enhanced error handling and response formatting
+- 🤖 Service now properly calls AI models for real configuration responses
+
+### v1.3.7 - Critical Fix for HA 2025.7
 - 🚨 Fixed critical issue where return_response was always False
 - ✅ Now checks both call.return_response and call.data.get('return_response')
 - 🎯 Returns hardcoded success response for testing
