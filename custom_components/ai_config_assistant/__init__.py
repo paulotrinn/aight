@@ -127,11 +127,13 @@ async def _async_register_services(hass: HomeAssistant) -> None:
     async def generate_config_service(call: ServiceCall) -> ServiceResponse | None:
         """Generate configuration from natural language input."""
         # Log the service call for debugging
-        _LOGGER.info("AI Config Assistant: Service called with prompt: %s", call.data.get('prompt', '')[:100])
-        
         # Check if response is requested - check both the proper way and the data field
         # In HA 2025.7, the return_response might come through the data dict
         wants_response = call.return_response or call.data.get('return_response', False)
+        
+        _LOGGER.warning("AI Config Assistant: Service called with prompt: %s", call.data.get('prompt', '')[:100])
+        _LOGGER.warning("Service wants_response: %s, call.return_response: %s, data.return_response: %s", 
+                       wants_response, call.return_response, call.data.get('return_response'))
         
         if not wants_response:
             _LOGGER.warning("No return response requested - service may not return data properly")
@@ -189,7 +191,9 @@ async def _async_register_services(hass: HomeAssistant) -> None:
                     "error": result.warnings[0] if result.warnings else "Configuration generation failed",
                 }
             
-            _LOGGER.info("Returning %s response", "success" if response_data["success"] else "error")
+            _LOGGER.warning("Service returning response: success=%s, has_config=%s", 
+                           response_data["success"], 
+                           "config" in response_data and len(str(response_data.get("config", ""))) > 0)
             return response_data
             
         except Exception as err:
