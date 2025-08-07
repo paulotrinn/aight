@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initSmoothScroll();
   initMobileMenu();
   initParallax();
+  initAnalyticsTracking();
 });
 
 // Navigation scroll effect
@@ -433,3 +434,170 @@ function cursorFollowEffect() {
 
 // Initialize cursor effect
 cursorFollowEffect();
+
+// Analytics Event Tracking
+function initAnalyticsTracking() {
+  // Check if gtag is available
+  if (typeof gtag === 'undefined') return;
+
+  // Track download clicks
+  document.querySelectorAll('a[href*="download"], a[href*="releases"]').forEach(link => {
+    link.addEventListener('click', function() {
+      const href = this.getAttribute('href');
+      const buttonText = this.textContent.trim();
+      
+      gtag('event', 'download_click', {
+        'event_category': 'engagement',
+        'event_label': buttonText,
+        'value': href
+      });
+    });
+  });
+
+  // Track GitHub clicks
+  document.querySelectorAll('a[href*="github.com"]').forEach(link => {
+    link.addEventListener('click', function() {
+      const href = this.getAttribute('href');
+      const buttonText = this.textContent.trim();
+      
+      gtag('event', 'github_click', {
+        'event_category': 'engagement',
+        'event_label': buttonText || 'GitHub Icon',
+        'value': href
+      });
+    });
+  });
+
+  // Track HACS button click
+  document.querySelectorAll('a[href*="my.home-assistant.io"]').forEach(link => {
+    link.addEventListener('click', function() {
+      gtag('event', 'hacs_click', {
+        'event_category': 'installation',
+        'event_label': 'HACS Repository Button'
+      });
+    });
+  });
+
+  // Track tab switches in Examples section
+  document.querySelectorAll('.tab-button').forEach(button => {
+    button.addEventListener('click', function() {
+      const tabName = this.dataset.tab;
+      
+      gtag('event', 'example_tab_click', {
+        'event_category': 'engagement',
+        'event_label': tabName
+      });
+    });
+  });
+
+  // Track navigation clicks
+  document.querySelectorAll('.nav-link:not(.nav-github)').forEach(link => {
+    link.addEventListener('click', function() {
+      const section = this.getAttribute('href').replace('#', '');
+      
+      gtag('event', 'navigation_click', {
+        'event_category': 'navigation',
+        'event_label': section
+      });
+    });
+  });
+
+  // Track CTA button clicks
+  document.querySelectorAll('.hero-actions .btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const buttonText = this.textContent.trim();
+      const isPrimary = this.classList.contains('btn-primary');
+      
+      gtag('event', 'hero_cta_click', {
+        'event_category': 'conversion',
+        'event_label': buttonText,
+        'value': isPrimary ? 10 : 5
+      });
+    });
+  });
+
+  // Track CTA section button clicks
+  document.querySelectorAll('.cta .btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const buttonText = this.textContent.trim();
+      
+      gtag('event', 'cta_section_click', {
+        'event_category': 'conversion',
+        'event_label': buttonText
+      });
+    });
+  });
+
+  // Track scroll depth
+  let maxScroll = 0;
+  let scrollReported = {
+    25: false,
+    50: false,
+    75: false,
+    90: false,
+    100: false
+  };
+
+  window.addEventListener('scroll', () => {
+    const scrollPercentage = Math.round((window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100);
+    
+    if (scrollPercentage > maxScroll) {
+      maxScroll = scrollPercentage;
+      
+      // Report scroll milestones
+      Object.keys(scrollReported).forEach(milestone => {
+        if (scrollPercentage >= parseInt(milestone) && !scrollReported[milestone]) {
+          scrollReported[milestone] = true;
+          
+          gtag('event', 'scroll_depth', {
+            'event_category': 'engagement',
+            'event_label': `${milestone}%`,
+            'value': parseInt(milestone)
+          });
+        }
+      });
+    }
+  });
+
+  // Track time on page
+  let startTime = Date.now();
+  
+  window.addEventListener('beforeunload', () => {
+    const timeOnPage = Math.round((Date.now() - startTime) / 1000);
+    
+    gtag('event', 'time_on_page', {
+      'event_category': 'engagement',
+      'event_label': 'seconds',
+      'value': timeOnPage
+    });
+  });
+
+  // Track provider card hovers (engagement indicator)
+  let providerHovers = new Set();
+  document.querySelectorAll('.provider-card').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+      const providerName = this.querySelector('.provider-logo').textContent;
+      
+      if (!providerHovers.has(providerName)) {
+        providerHovers.add(providerName);
+        
+        gtag('event', 'provider_interest', {
+          'event_category': 'engagement',
+          'event_label': providerName
+        });
+      }
+    });
+  });
+
+  // Track FAQ interactions
+  document.querySelectorAll('.faq-item').forEach(item => {
+    item.addEventListener('click', function() {
+      const question = this.querySelector('.faq-question').textContent;
+      
+      gtag('event', 'faq_click', {
+        'event_category': 'engagement',
+        'event_label': question
+      });
+    });
+  });
+}
