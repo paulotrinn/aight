@@ -181,12 +181,18 @@ function initTabs() {
       document.getElementById(tabName).classList.add('active');
 
       // Animate the new content
-      gsap.from(`#${tabName}`, {
-        duration: 0.5,
-        y: 20,
-        opacity: 0,
-        ease: 'power2.out'
-      });
+      gsap.fromTo(`#${tabName}`, 
+        {
+          y: 20,
+          opacity: 0
+        },
+        {
+          duration: 0.5,
+          y: 0,
+          opacity: 1,
+          ease: 'power2.out'
+        }
+      );
     });
   });
 }
