@@ -129,10 +129,14 @@ async def _async_register_services(hass: HomeAssistant) -> None:
         # Log the service call for debugging
         _LOGGER.warning("AI Config Assistant: Service called!")
         _LOGGER.warning("Data: %s", call.data)
-        _LOGGER.warning("Return response requested: %s", call.return_response)
+        _LOGGER.warning("Return response requested (call.return_response): %s", call.return_response)
+        _LOGGER.warning("Return response in data: %s", call.data.get('return_response'))
         
-        # Check if response is requested (required for new chat interface)
-        if not call.return_response:
+        # Check if response is requested - check both the proper way and the data field
+        # In HA 2025.7, the return_response might come through the data dict
+        wants_response = call.return_response or call.data.get('return_response', False)
+        
+        if not wants_response:
             _LOGGER.warning("No return response requested - this is likely an error!")
             # Return test data anyway for debugging
             return {
@@ -143,18 +147,17 @@ async def _async_register_services(hass: HomeAssistant) -> None:
         
         # TEMPORARY: Always return a test response to debug the issue
         test_response = {
-            "success": False,
-            "error": "Service is running but LLM backend not responding. Check logs for details.",
-            "debug": "This is a test response to verify service communication",
-            "data_received": str(call.data)
+            "success": True,
+            "config": "alias: Turn on gym lights\ntrigger:\n  - platform: state\n    entity_id: binary_sensor.gym_motion\n    to: 'on'\naction:\n  - service: light.turn_on\n    target:\n      entity_id: light.gym_main_lights",
+            "explanation": "This is a TEST response to verify service communication is working.",
+            "entities_used": call.data.get('entities', []),
+            "debug": "Service is working! This is a hardcoded test response."
         }
-        _LOGGER.warning("Returning test response: %s", test_response)
+        _LOGGER.warning("Returning test response with success=True")
         return test_response
         
-        # Only return data if return_response is True
-        if not call.return_response:
-            _LOGGER.info("No return response requested, executing without returning data")
-            return None
+        # This code is unreachable due to early return above, removing it
+        # The test response is always returned for debugging
         
         # Test: Return a simple response immediately to check if the service response works
         if call.data.get("test_mode"):
