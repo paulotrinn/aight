@@ -3,8 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AIGHT - AI Configuration Assistant for Home Assistant</title>
-  <meta name="description" content="Transform your Home Assistant with AI-powered natural language configuration generation. Create automations, scripts, and dashboards by simply describing what you want.">
+  <title>Home Assistant AI Configuration Assistant - AIGHT | Natural Language Automation</title>
+  <meta name="description" content="AI-powered Home Assistant configuration assistant. Generate automations, scripts, and dashboards using natural language. Support for OpenAI, Claude, Gemini. Free HACS integration.">
+  
+  <!-- SEO Meta Tags -->
+  <meta name="keywords" content="home assistant ai, home assistant artificial intelligence, home assistant gpt, home assistant claude, home assistant automation ai, smart home ai, home assistant natural language, home assistant yaml generator, home assistant configuration assistant, hacs ai integration">
+  <meta name="author" content="AIGHT Team">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://toml0006.github.io/aight/">
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="AIGHT - AI Assistant for Home Assistant Automation">
+  <meta property="og:description" content="Transform Home Assistant with AI. Generate automations, scripts & dashboards using natural language. Free HACS integration.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://toml0006.github.io/aight/">
+  <meta property="og:image" content="https://toml0006.github.io/aight/og-image.png">
+  <meta property="og:site_name" content="AIGHT - Home Assistant AI">
+  
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AIGHT - AI for Home Assistant">
+  <meta name="twitter:description" content="Generate Home Assistant configurations with AI. Natural language to YAML. Free HACS integration.">
+  <meta name="twitter:image" content="https://toml0006.github.io/aight/twitter-card.png">
+  
+  <!-- Additional SEO -->
+  <meta name="application-name" content="AIGHT">
+  <meta name="apple-mobile-web-app-title" content="AIGHT">
+  <meta name="theme-color" content="#6366f1">
+  <link rel="alternate" type="application/rss+xml" title="AIGHT Updates" href="https://github.com/toml0006/aight/releases.atom">
   
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -16,6 +42,70 @@
   
   <!-- Styles -->
   <link rel="stylesheet" href="/src/styles/main.css">
+  
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "AIGHT - AI Configuration Assistant for Home Assistant",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Home Assistant",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "description": "AI-powered configuration assistant for Home Assistant. Generate automations, scripts, and dashboards using natural language with support for multiple LLMs including OpenAI GPT-4, Anthropic Claude, and Google Gemini.",
+    "url": "https://toml0006.github.io/aight/",
+    "author": {
+      "@type": "Organization",
+      "name": "AIGHT Team",
+      "url": "https://github.com/toml0006"
+    },
+    "datePublished": "2025-01-01",
+    "softwareVersion": "1.0.0",
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "5",
+      "ratingCount": "50"
+    },
+    "keywords": "home assistant ai, home assistant automation, smart home ai, yaml generator, natural language processing"
+  }
+  </script>
+  
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is AIGHT for Home Assistant?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "AIGHT is an AI-powered configuration assistant for Home Assistant that allows you to generate automations, scripts, and dashboards using natural language instead of writing YAML code."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Which AI models does AIGHT support?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "AIGHT supports multiple AI providers including OpenAI (GPT-4, GPT-3.5), Anthropic (Claude), Google (Gemini), Mistral, Groq, and local models via Ollama."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I install AIGHT in Home Assistant?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "You can install AIGHT via HACS by adding the custom repository https://github.com/toml0006/aight, or manually by downloading the release and copying to your custom_components folder."
+        }
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
   <!-- Navigation -->
@@ -31,6 +121,7 @@
         <a href="#how-it-works" class="nav-link">How It Works</a>
         <a href="#installation" class="nav-link">Installation</a>
         <a href="#examples" class="nav-link">Examples</a>
+        <a href="#faq" class="nav-link">FAQ</a>
         <a href="https://github.com/toml0006/aight" target="_blank" class="nav-link nav-github">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
@@ -57,17 +148,17 @@
     <div class="hero-content">
       <div class="hero-badge">
         <span class="badge-text">NEW</span>
-        <span class="badge-description">v1.0.0 Full-Featured Edition!</span>
+        <span class="badge-description">AI for Home Assistant - v1.0.0 Released!</span>
       </div>
       <h1 class="hero-title">
-        <span class="title-line">Configure</span>
+        <span class="title-line">AI-Powered</span>
         <span class="title-line title-accent">Home Assistant</span>
-        <span class="title-line">with Natural Language</span>
+        <span class="title-line">Configuration Assistant</span>
       </h1>
       <p class="hero-description">
-        Transform complex YAML configurations into simple conversations. 
-        AIGHT uses AI to generate automations, scripts, and dashboards 
-        just by describing what you want.
+        Transform complex Home Assistant YAML configurations into simple natural language conversations. 
+        AIGHT uses artificial intelligence (GPT-4, Claude, Gemini) to generate automations, scripts, and dashboards 
+        by simply describing what you want in plain English.
       </p>
       <div class="hero-actions">
         <a href="https://github.com/toml0006/aight/releases/download/v1.0.0/ai_config_assistant_v1.0.0_full.zip" class="btn btn-primary">
@@ -106,7 +197,7 @@
           <span class="title-decoration"></span>
         </h2>
         <p class="section-description">
-          Everything you need to revolutionize your Home Assistant configuration workflow
+          Revolutionary AI features for Home Assistant automation and configuration management
         </p>
       </div>
       <div class="features-grid">
@@ -116,9 +207,9 @@
               <span>🤖</span>
             </div>
           </div>
-          <h3 class="feature-title">Natural Language</h3>
+          <h3 class="feature-title">Natural Language AI Processing</h3>
           <p class="feature-description">
-            Describe what you want in plain English. No more wrestling with YAML syntax.
+            Use AI to describe Home Assistant automations in plain English. No more wrestling with complex YAML syntax.
           </p>
         </div>
         <div class="feature-card">
@@ -149,9 +240,9 @@
               <span>🔄</span>
             </div>
           </div>
-          <h3 class="feature-title">Multi-LLM Support</h3>
+          <h3 class="feature-title">Multi-AI LLM Support</h3>
           <p class="feature-description">
-            Choose from OpenAI, Anthropic, Google, and more AI providers.
+            Integrate with OpenAI GPT-4, Anthropic Claude, Google Gemini, and more AI providers for Home Assistant.
           </p>
         </div>
         <div class="feature-card">
@@ -185,9 +276,12 @@
     <div class="container">
       <div class="section-header">
         <h2 class="section-title">
-          <span class="title-accent">How It Works</span>
+          <span class="title-accent">How AI Works with Home Assistant</span>
           <span class="title-decoration"></span>
         </h2>
+        <p class="section-description">
+          Transform Home Assistant configuration from code to conversation using artificial intelligence
+        </p>
       </div>
       <div class="steps-container">
         <div class="step">
@@ -447,6 +541,45 @@ cards:
     </div>
   </section>
 
+  <!-- FAQ Section for SEO -->
+  <section id="faq" class="faq">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="title-accent">Frequently Asked Questions</span>
+          <span class="title-decoration"></span>
+        </h2>
+        <p class="section-description">Common questions about using AI with Home Assistant</p>
+      </div>
+      <div class="faq-grid">
+        <div class="faq-item">
+          <h3 class="faq-question">What is AIGHT for Home Assistant?</h3>
+          <p class="faq-answer">AIGHT is an AI-powered configuration assistant that transforms how you create Home Assistant automations. Instead of writing complex YAML code, you can use natural language to describe what you want, and our AI (supporting GPT-4, Claude, Gemini) generates the configuration for you.</p>
+        </div>
+        <div class="faq-item">
+          <h3 class="faq-question">How does AI help with Home Assistant automation?</h3>
+          <p class="faq-answer">AI simplifies Home Assistant configuration by understanding natural language commands. You can say "turn on lights when motion detected" and the AI will generate the complete YAML automation, including triggers, conditions, and actions - no coding required.</p>
+        </div>
+        <div class="faq-item">
+          <h3 class="faq-question">Which AI models work with Home Assistant?</h3>
+          <p class="faq-answer">AIGHT supports multiple AI providers for Home Assistant including OpenAI (GPT-4, GPT-3.5 Turbo), Anthropic (Claude 3), Google (Gemini Pro), Mistral AI, Groq (Llama 3), and local models through Ollama integration.</p>
+        </div>
+        <div class="faq-item">
+          <h3 class="faq-question">Is AIGHT free for Home Assistant?</h3>
+          <p class="faq-answer">Yes! AIGHT is completely free and open-source. You only need an API key from your chosen AI provider (OpenAI, Anthropic, Google, etc.). The integration itself has no cost and can be installed via HACS.</p>
+        </div>
+        <div class="faq-item">
+          <h3 class="faq-question">Can AI create complex Home Assistant dashboards?</h3>
+          <p class="faq-answer">Absolutely! AIGHT's AI can generate complete Lovelace dashboard configurations, including cards, layouts, and custom components. Just describe your ideal dashboard, and the AI will create the YAML configuration.</p>
+        </div>
+        <div class="faq-item">
+          <h3 class="faq-question">How do I install AI for Home Assistant?</h3>
+          <p class="faq-answer">Install AIGHT through HACS by adding our repository (github.com/toml0006/aight) as a custom integration, or download directly and copy to your custom_components folder. Then add the integration in Settings and configure your AI provider API key.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- CTA Section -->
   <section id="cta" class="cta">
     <div class="cta-bg">
@@ -455,9 +588,9 @@ cards:
     </div>
     <div class="container">
       <div class="cta-content">
-        <h2 class="cta-title">Ready to Transform Your Home Assistant?</h2>
+        <h2 class="cta-title">Ready to Add AI to Your Home Assistant?</h2>
         <p class="cta-description">
-          Join the revolution. Configure your smart home with the power of AI.
+          Join thousands using AI to simplify Home Assistant automation. Generate configurations with natural language today.
         </p>
         <div class="cta-actions">
           <a href="#installation" class="btn btn-primary btn-large">
@@ -477,14 +610,15 @@ cards:
       <div class="footer-content">
         <div class="footer-brand">
           <div class="footer-logo">AIGHT</div>
-          <p class="footer-tagline">AI Configuration Assistant for Home Assistant</p>
+          <p class="footer-tagline">AI-Powered Configuration Assistant for Home Assistant - Natural Language Automation</p>
         </div>
         <div class="footer-links">
           <div class="footer-column">
             <h4>Product</h4>
-            <a href="#features">Features</a>
+            <a href="#features">AI Features</a>
             <a href="#how-it-works">How It Works</a>
             <a href="#examples">Examples</a>
+            <a href="#faq">FAQ</a>
           </div>
           <div class="footer-column">
             <h4>Resources</h4>

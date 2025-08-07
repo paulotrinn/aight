@@ -820,6 +820,45 @@ h3 { font-size: clamp(1.5rem, 3vw, 2rem); }
   color: var(--color-gray-dark);
 }
 
+/* FAQ Section */
+.faq {
+  padding: var(--space-section) 0;
+  background: var(--color-white);
+}
+
+.faq-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: var(--space-lg);
+  margin-top: var(--space-2xl);
+}
+
+.faq-item {
+  background: var(--color-surface);
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  border: 3px solid var(--color-black);
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.faq-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 8px 8px 0 var(--color-primary);
+}
+
+.faq-question {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: var(--space-sm);
+  color: var(--color-primary);
+}
+
+.faq-answer {
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
 /* CTA Section */
 .cta {
   padding: var(--space-3xl) 0;
