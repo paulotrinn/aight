@@ -1,6 +1,6 @@
 # Aight - AI Configuration Assistant for Home Assistant
 
-🚀 **v1.3.8** - The most advanced Home Assistant AI configuration tool with **conversational chat interface**!
+🚀 **v1.4.0** - The most advanced Home Assistant AI configuration tool with **conversational chat interface**!
 
 📖 **[Documentation & Demo](https://toml0006.github.io/aight/)** | 📦 **[Download Latest](https://github.com/toml0006/aight/releases/latest)** | 💬 **[Community](https://github.com/toml0006/aight/discussions)**
 
@@ -35,9 +35,9 @@
 
 ### 🚀 Quick Install - Latest Version
 
-[![Download Latest Version](https://img.shields.io/badge/Download-v1.3.8%20Latest-success?style=for-the-badge&logo=homeassistant)](https://github.com/toml0006/aight/releases/latest/download/aight.zip)
+[![Download Latest Version](https://img.shields.io/badge/Download-v1.4.0%20Latest-success?style=for-the-badge&logo=homeassistant)](https://github.com/toml0006/aight/releases/latest/download/aight.zip)
 
-**v1.3.8** includes the revolutionary **conversational chat interface**:
+**v1.4.0** includes the revolutionary **conversational chat interface**:
 - 💬 Natural chat experience - just type what you want!
 - 🎯 Automatic entity detection - no manual selection needed
 - 🚀 One-click deployment to Home Assistant
@@ -298,7 +298,18 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 ## 📝 Changelog
 
-### v1.3.8 (Latest) - Full LLM Functionality Restored
+### v1.4.0 (Latest) - Enhanced Error Handling & UI Feedback
+- ✅ Added user-friendly error messages for common LLM issues (quota, auth, network)
+- 💳 OpenAI quota exceeded errors now show direct billing link
+- 🔑 API key errors provide clear configuration instructions
+- 🌐 Network and timeout errors have helpful messages
+- 💬 Service layer now properly surfaces errors to chat UI
+- 👁️ Errors appear in chat instead of just logs
+
+### v1.3.9 - Enhanced Service Debugging
+- 🔍 Added detailed service response logging for troubleshooting
+
+### v1.3.8 - Full LLM Functionality Restored
 - ✅ Removed test response and restored actual AI configuration generation
 - 🆕 Added OpenRouter provider support with proper API configuration  
 - 🔇 Improved service logging to be less verbose while maintaining debugging
