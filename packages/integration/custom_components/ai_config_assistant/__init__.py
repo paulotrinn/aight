@@ -127,18 +127,29 @@ async def _async_register_services(hass: HomeAssistant) -> None:
     async def generate_config_service(call: ServiceCall) -> ServiceResponse | None:
         """Generate configuration from natural language input."""
         # Log the service call for debugging
-        _LOGGER.info("Generate config service called with data: %s", call.data)
-        _LOGGER.info("Return response requested: %s", call.return_response)
+        _LOGGER.warning("AI Config Assistant: Service called!")
+        _LOGGER.warning("Data: %s", call.data)
+        _LOGGER.warning("Return response requested: %s", call.return_response)
+        
+        # Check if response is requested (required for new chat interface)
+        if not call.return_response:
+            _LOGGER.warning("No return response requested - this is likely an error!")
+            # Return test data anyway for debugging
+            return {
+                "success": False,
+                "error": "Service requires return_response=true to function properly",
+                "debug": "Update your frontend to request responses"
+            }
         
         # TEMPORARY: Always return a test response to debug the issue
-        if call.return_response:
-            test_response = {
-                "success": False,
-                "error": "Service is running but LLM backend not responding. Check logs for details.",
-                "debug": "This is a test response to verify service communication"
-            }
-            _LOGGER.info("Returning test response: %s", test_response)
-            return test_response
+        test_response = {
+            "success": False,
+            "error": "Service is running but LLM backend not responding. Check logs for details.",
+            "debug": "This is a test response to verify service communication",
+            "data_received": str(call.data)
+        }
+        _LOGGER.warning("Returning test response: %s", test_response)
+        return test_response
         
         # Only return data if return_response is True
         if not call.return_response:
