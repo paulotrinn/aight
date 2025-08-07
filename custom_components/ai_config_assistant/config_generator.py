@@ -107,12 +107,26 @@ class ConfigGenerator:
             )
 
         except Exception as err:
+            error_msg = str(err)
             _LOGGER.error("Error generating configuration: %s", err)
+            
+            # Check for specific LLM errors and provide better messages
+            if "RateLimitError" in error_msg or "quota" in error_msg.lower():
+                user_friendly_error = "⚠️ OpenAI API quota exceeded. Please check your billing details at https://platform.openai.com/account/billing"
+            elif "AuthenticationError" in error_msg or "api_key" in error_msg.lower():
+                user_friendly_error = "🔑 API key invalid or missing. Please reconfigure your LLM provider in the integration settings."
+            elif "TimeoutError" in error_msg or "timeout" in error_msg.lower():
+                user_friendly_error = "⏱️ Request timed out. The AI service may be overloaded. Please try again."
+            elif "NetworkError" in error_msg or "connection" in error_msg.lower():
+                user_friendly_error = "🌐 Network connection failed. Please check your internet connection."
+            else:
+                user_friendly_error = f"❌ AI service error: {error_msg}"
+            
             return GenerationResult(
                 config="",
                 explanation="",
                 entities_used=[],
-                warnings=[f"Generation failed: {err}"],
+                warnings=[user_friendly_error],
                 success=False
             )
 

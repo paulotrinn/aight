@@ -186,9 +186,12 @@ async def _async_register_services(hass: HomeAssistant) -> None:
                     "entities_used": result.entities_used,
                 }
             else:
+                # Make sure to get the most detailed error message
+                error_msg = result.warnings[0] if result.warnings else "Configuration generation failed"
                 response_data = {
                     "success": False,
-                    "error": result.warnings[0] if result.warnings else "Configuration generation failed",
+                    "error": error_msg,
+                    "warnings": result.warnings,  # Include all warnings for debugging
                 }
             
             _LOGGER.warning("Service returning response: success=%s, has_config=%s", 
