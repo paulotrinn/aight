@@ -1,4 +1,6 @@
-customElements.define('ai-config-panel', class extends HTMLElement {
+// Check if already defined to prevent duplicate registration
+if (!customElements.get('ai-config-panel')) {
+  customElements.define('ai-config-panel', class extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
@@ -2767,4 +2769,5 @@ Please share this information when reporting issues.
       reloadBtn.innerHTML = '🔄 Reload';
     }
   }
-});
+  });
+}
