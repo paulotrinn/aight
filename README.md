@@ -1,6 +1,6 @@
 # Aight - AI Configuration Assistant for Home Assistant
 
-🚀 **v1.3.3** - The most advanced Home Assistant AI configuration tool with **conversational chat interface**!
+🚀 **v1.3.4** - The most advanced Home Assistant AI configuration tool with **conversational chat interface**!
 
 📖 **[Documentation & Demo](https://toml0006.github.io/aight/)** | 📦 **[Download Latest](https://github.com/toml0006/aight/releases/latest)** | 💬 **[Community](https://github.com/toml0006/aight/discussions)**
 
@@ -35,9 +35,9 @@
 
 ### 🚀 Quick Install - Latest Version
 
-[![Download Latest Version](https://img.shields.io/badge/Download-v1.3.3%20Latest-success?style=for-the-badge&logo=homeassistant)](https://github.com/toml0006/aight/releases/latest/download/aight.zip)
+[![Download Latest Version](https://img.shields.io/badge/Download-v1.3.4%20Latest-success?style=for-the-badge&logo=homeassistant)](https://github.com/toml0006/aight/releases/latest/download/aight.zip)
 
-**v1.3.3** includes the revolutionary **conversational chat interface**:
+**v1.3.4** includes the revolutionary **conversational chat interface**:
 - 💬 Natural chat experience - just type what you want!
 - 🎯 Automatic entity detection - no manual selection needed
 - 🚀 One-click deployment to Home Assistant
@@ -298,7 +298,14 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 ## 📝 Changelog
 
-### v1.3.3 (Latest) - Enhanced Debugging
+### v1.3.4 (Latest) - Critical Service Response Fix
+- 🔧 Fixed service response issue by changing to SupportsResponse.REQUIRED
+- ✅ Service now properly returns configuration data instead of just context
+- 📊 Added comprehensive response logging for debugging
+- 🛠️ Fixed malformed services.yaml with proper entity field support
+- 🎯 Synced all fixes to packages directory
+
+### v1.3.3 - Enhanced Debugging
 - 🔍 Added comprehensive service call debugging and logging
 - 📊 Enhanced error logs now show full service responses
 - 🛠️ Better error classification and troubleshooting information
