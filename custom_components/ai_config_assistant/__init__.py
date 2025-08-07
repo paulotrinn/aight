@@ -370,7 +370,7 @@ async def _async_register_services(hass: HomeAssistant) -> None:
     # Register services
     hass.services.async_register(
         DOMAIN, SERVICE_GENERATE_CONFIG, generate_config_service,
-        supports_response=SupportsResponse.REQUIRED
+        supports_response=SupportsResponse.OPTIONAL
     )
     
     hass.services.async_register(
@@ -383,7 +383,7 @@ async def _async_register_services(hass: HomeAssistant) -> None:
     
     hass.services.async_register(
         DOMAIN, SERVICE_DEPLOY_CONFIG, deploy_config_service,
-        supports_response=SupportsResponse.REQUIRED
+        supports_response=SupportsResponse.OPTIONAL
     )
     
     hass.services.async_register(

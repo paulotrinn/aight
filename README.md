@@ -1,6 +1,6 @@
 # Aight - AI Configuration Assistant for Home Assistant
 
-🚀 **v1.3.4** - The most advanced Home Assistant AI configuration tool with **conversational chat interface**!
+🚀 **v1.3.5** - The most advanced Home Assistant AI configuration tool with **conversational chat interface**!
 
 📖 **[Documentation & Demo](https://toml0006.github.io/aight/)** | 📦 **[Download Latest](https://github.com/toml0006/aight/releases/latest)** | 💬 **[Community](https://github.com/toml0006/aight/discussions)**
 
@@ -35,9 +35,9 @@
 
 ### 🚀 Quick Install - Latest Version
 
-[![Download Latest Version](https://img.shields.io/badge/Download-v1.3.4%20Latest-success?style=for-the-badge&logo=homeassistant)](https://github.com/toml0006/aight/releases/latest/download/aight.zip)
+[![Download Latest Version](https://img.shields.io/badge/Download-v1.3.5%20Latest-success?style=for-the-badge&logo=homeassistant)](https://github.com/toml0006/aight/releases/latest/download/aight.zip)
 
-**v1.3.4** includes the revolutionary **conversational chat interface**:
+**v1.3.5** includes the revolutionary **conversational chat interface**:
 - 💬 Natural chat experience - just type what you want!
 - 🎯 Automatic entity detection - no manual selection needed
 - 🚀 One-click deployment to Home Assistant
@@ -298,7 +298,12 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 ## 📝 Changelog
 
-### v1.3.4 (Latest) - Critical Service Response Fix
+### v1.3.5 (Latest) - Hotfix for SupportsResponse Compatibility
+- 🚨 Fixed AttributeError: SupportsResponse.REQUIRED doesn't exist in older HA versions
+- ✅ Reverted to SupportsResponse.OPTIONAL for compatibility
+- 🔧 Integration now loads properly without errors
+
+### v1.3.4 - Critical Service Response Fix
 - 🔧 Fixed service response issue by changing to SupportsResponse.REQUIRED
 - ✅ Service now properly returns configuration data instead of just context
 - 📊 Added comprehensive response logging for debugging
