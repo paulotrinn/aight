@@ -6,7 +6,7 @@ from typing import Any, Dict
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
-from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
+from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -160,17 +160,20 @@ async def _async_register_services(hass: HomeAssistant) -> None:
             
             # Return response for new chat interface
             if result.success:
-                return {
+                response_data = {
                     "success": True,
                     "config": result.config,
                     "explanation": result.explanation,
                     "entities_used": result.entities_used,
                 }
             else:
-                return {
+                response_data = {
                     "success": False,
                     "error": result.warnings[0] if result.warnings else "Configuration generation failed",
                 }
+            
+            _LOGGER.info("Returning response: %s", response_data)
+            return response_data
             
         except Exception as err:
             _LOGGER.error("Service call exception: %s", err, exc_info=True)
@@ -183,10 +186,12 @@ async def _async_register_services(hass: HomeAssistant) -> None:
             )
             
             # Return error response
-            return {
+            error_response = {
                 "success": False,
                 "error": str(err),
             }
+            _LOGGER.error("Returning error response: %s", error_response)
+            return error_response
     
     async def validate_config_service(call: ServiceCall) -> None:
         """Validate a configuration."""
@@ -365,7 +370,7 @@ async def _async_register_services(hass: HomeAssistant) -> None:
     # Register services
     hass.services.async_register(
         DOMAIN, SERVICE_GENERATE_CONFIG, generate_config_service,
-        supports_response=SupportsResponse.OPTIONAL
+        supports_response=SupportsResponse.REQUIRED
     )
     
     hass.services.async_register(
@@ -378,7 +383,7 @@ async def _async_register_services(hass: HomeAssistant) -> None:
     
     hass.services.async_register(
         DOMAIN, SERVICE_DEPLOY_CONFIG, deploy_config_service,
-        supports_response=SupportsResponse.OPTIONAL
+        supports_response=SupportsResponse.REQUIRED
     )
     
     hass.services.async_register(

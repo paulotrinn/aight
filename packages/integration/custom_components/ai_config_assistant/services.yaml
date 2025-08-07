@@ -24,16 +24,18 @@ generate_config:
             - scene
             - dashboard
             - template
-
-reload:
-  name: Reload Integration
-  description: Reload the AI Configuration Assistant integration without restarting Home Assistant
-  fields: {}
     context:
       name: Context
       description: Additional context or requirements
       required: false
       example: "Use only Zigbee devices"
+      selector:
+        object:
+    entities:
+      name: Entity IDs
+      description: List of entity IDs to include in generation
+      required: false
+      example: ["light.living_room", "binary_sensor.motion"]
       selector:
         object:
 
@@ -68,11 +70,6 @@ validate_config:
             - dashboard
             - template
 
-reload:
-  name: Reload Integration
-  description: Reload the AI Configuration Assistant integration without restarting Home Assistant
-  fields: {}
-
 preview_config:
   name: Preview Configuration
   description: Preview a configuration with live entity data
@@ -97,6 +94,29 @@ preview_config:
             - scene
             - dashboard
             - template
+
+deploy_config:
+  name: Deploy Configuration
+  description: Deploy a generated configuration to Home Assistant
+  fields:
+    config:
+      name: Configuration
+      description: YAML configuration to deploy
+      required: true
+      selector:
+        text:
+          multiline: true
+    type:
+      name: Configuration Type
+      description: Type of configuration to deploy
+      required: false
+      default: automation
+      selector:
+        select:
+          options:
+            - automation
+            - script
+            - scene
 
 reload:
   name: Reload Integration

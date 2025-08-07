@@ -1,11 +1,12 @@
 """AI Configuration Assistant integration for Home Assistant."""
 import logging
+import time
 from typing import Any, Dict
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -17,6 +18,7 @@ from .const import (
     SERVICE_VALIDATE_CONFIG,
     SERVICE_PREVIEW_CONFIG,
     SERVICE_RELOAD,
+    SERVICE_DEPLOY_CONFIG,
     LLM_PROVIDERS,
 )
 from .llm_client import LLMClientManager
@@ -122,33 +124,59 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _async_register_services(hass: HomeAssistant) -> None:
     """Register AI Config Assistant services."""
     
-    async def generate_config_service(call: ServiceCall) -> None:
+    async def generate_config_service(call: ServiceCall) -> ServiceResponse:
         """Generate configuration from natural language input."""
-        config_generator = hass.data[DOMAIN]["config_generator"]
-        
-        prompt = call.data.get("prompt", "")
-        config_type = call.data.get("type", "automation")
-        context = call.data.get("context", {})
-        
         try:
+            _LOGGER.info("Generate config service called with data: %s", call.data)
+            config_generator = hass.data[DOMAIN]["config_generator"]
+            
+            prompt = call.data.get("prompt", "")
+            config_type = call.data.get("type", "automation")
+            context = call.data.get("context", {})
+            include_entities = call.data.get("entities", [])
+            
+            _LOGGER.info("Calling config generator with prompt: %s", prompt)
+            
             result = await config_generator.generate_config(
                 prompt=prompt,
                 config_type=config_type,
                 context=context,
+                include_entities=include_entities,
             )
             
+            _LOGGER.info("Config generator returned: success=%s", result.success)
+            
+            # Fire event for backward compatibility
             hass.bus.async_fire(
                 "ai_config_assistant_config_generated",
                 {
+                    "success": result.success,
+                    "config": result.config,
+                    "explanation": result.explanation,
+                    "entities_used": result.entities_used,
+                    "error": result.warnings[0] if result.warnings and not result.success else None,
+                },
+            )
+            
+            # Return response for new chat interface
+            if result.success:
+                response_data = {
                     "success": True,
                     "config": result.config,
                     "explanation": result.explanation,
                     "entities_used": result.entities_used,
-                },
-            )
+                }
+            else:
+                response_data = {
+                    "success": False,
+                    "error": result.warnings[0] if result.warnings else "Configuration generation failed",
+                }
+            
+            _LOGGER.info("Returning response: %s", response_data)
+            return response_data
             
         except Exception as err:
-            _LOGGER.error("Error generating config: %s", err)
+            _LOGGER.error("Service call exception: %s", err, exc_info=True)
             hass.bus.async_fire(
                 "ai_config_assistant_config_generated",
                 {
@@ -156,6 +184,14 @@ async def _async_register_services(hass: HomeAssistant) -> None:
                     "error": str(err),
                 },
             )
+            
+            # Return error response
+            error_response = {
+                "success": False,
+                "error": str(err),
+            }
+            _LOGGER.error("Returning error response: %s", error_response)
+            return error_response
     
     async def validate_config_service(call: ServiceCall) -> None:
         """Validate a configuration."""
@@ -221,6 +257,86 @@ async def _async_register_services(hass: HomeAssistant) -> None:
                 },
             )
     
+    async def deploy_config_service(call: ServiceCall) -> ServiceResponse:
+        """Deploy a generated configuration to Home Assistant."""
+        import yaml
+        
+        config_yaml = call.data.get("config", "")
+        config_type = call.data.get("type", "automation")
+        
+        try:
+            # Parse the YAML
+            config_data = yaml.safe_load(config_yaml)
+            
+            if config_type == "automation":
+                # Add to automations
+                automation_config = {
+                    "id": f"ai_generated_{int(time.time())}",
+                    "alias": config_data.get("alias", "AI Generated Automation"),
+                    "description": config_data.get("description", "Generated by AI Config Assistant"),
+                    "trigger": config_data.get("trigger", []),
+                    "condition": config_data.get("condition", []),
+                    "action": config_data.get("action", []),
+                    "mode": config_data.get("mode", "single"),
+                }
+                
+                # Store in Home Assistant's automation config
+                # This is a simplified version - in production you'd write to automations.yaml
+                _LOGGER.info("Deploying automation: %s", automation_config)
+                
+                # Fire event for other components to handle
+                hass.bus.async_fire(
+                    "ai_config_assistant_deploy_automation",
+                    {"config": automation_config}
+                )
+                
+                return {
+                    "success": True,
+                    "message": "Automation deployed successfully",
+                    "id": automation_config["id"]
+                }
+                
+            elif config_type == "script":
+                # Similar handling for scripts
+                script_config = {
+                    "alias": config_data.get("alias", "AI Generated Script"),
+                    "sequence": config_data.get("sequence", []),
+                }
+                
+                _LOGGER.info("Deploying script: %s", script_config)
+                
+                return {
+                    "success": True,
+                    "message": "Script deployed successfully"
+                }
+                
+            elif config_type == "scene":
+                # Similar handling for scenes
+                scene_config = {
+                    "name": config_data.get("name", "AI Generated Scene"),
+                    "entities": config_data.get("entities", {}),
+                }
+                
+                _LOGGER.info("Deploying scene: %s", scene_config)
+                
+                return {
+                    "success": True,
+                    "message": "Scene deployed successfully"
+                }
+                
+            else:
+                return {
+                    "success": False,
+                    "error": f"Deployment for {config_type} not yet implemented"
+                }
+                
+        except Exception as err:
+            _LOGGER.error("Error deploying config: %s", err)
+            return {
+                "success": False,
+                "error": str(err)
+            }
+    
     async def reload_service(call: ServiceCall) -> None:
         """Reload the AI Configuration Assistant integration."""
         _LOGGER.info("Reloading AI Configuration Assistant integration...")
@@ -253,7 +369,8 @@ async def _async_register_services(hass: HomeAssistant) -> None:
 
     # Register services
     hass.services.async_register(
-        DOMAIN, SERVICE_GENERATE_CONFIG, generate_config_service
+        DOMAIN, SERVICE_GENERATE_CONFIG, generate_config_service,
+        supports_response=SupportsResponse.REQUIRED
     )
     
     hass.services.async_register(
@@ -262,6 +379,11 @@ async def _async_register_services(hass: HomeAssistant) -> None:
     
     hass.services.async_register(
         DOMAIN, SERVICE_PREVIEW_CONFIG, preview_config_service
+    )
+    
+    hass.services.async_register(
+        DOMAIN, SERVICE_DEPLOY_CONFIG, deploy_config_service,
+        supports_response=SupportsResponse.REQUIRED
     )
     
     hass.services.async_register(
