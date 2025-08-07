@@ -100,6 +100,12 @@ class LLMClientManager:
         elif provider == "groq":
             os.environ["GROQ_API_KEY"] = api_key
             self._litellm.groq_key = api_key
+        elif provider == "openrouter":
+            # OpenRouter uses OpenAI-compatible API
+            os.environ["OPENROUTER_API_KEY"] = api_key
+            # Set custom API base for OpenRouter
+            os.environ["OPENAI_API_BASE"] = "https://openrouter.ai/api/v1"
+            os.environ["OPENAI_API_KEY"] = api_key
         # Ollama doesn't need API key configuration
         elif provider == "ollama":
             pass

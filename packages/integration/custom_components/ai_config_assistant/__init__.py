@@ -127,42 +127,19 @@ async def _async_register_services(hass: HomeAssistant) -> None:
     async def generate_config_service(call: ServiceCall) -> ServiceResponse | None:
         """Generate configuration from natural language input."""
         # Log the service call for debugging
-        _LOGGER.warning("AI Config Assistant: Service called!")
-        _LOGGER.warning("Data: %s", call.data)
-        _LOGGER.warning("Return response requested (call.return_response): %s", call.return_response)
-        _LOGGER.warning("Return response in data: %s", call.data.get('return_response'))
+        _LOGGER.info("AI Config Assistant: Service called with prompt: %s", call.data.get('prompt', '')[:100])
         
         # Check if response is requested - check both the proper way and the data field
         # In HA 2025.7, the return_response might come through the data dict
         wants_response = call.return_response or call.data.get('return_response', False)
         
         if not wants_response:
-            _LOGGER.warning("No return response requested - this is likely an error!")
-            # Return test data anyway for debugging
+            _LOGGER.warning("No return response requested - service may not return data properly")
+            # Try to return data anyway for compatibility
             return {
                 "success": False,
-                "error": "Service requires return_response=true to function properly",
-                "debug": "Update your frontend to request responses"
+                "error": "Service requires return_response=true to function properly"
             }
-        
-        # TEMPORARY: Always return a test response to debug the issue
-        test_response = {
-            "success": True,
-            "config": "alias: Turn on gym lights\ntrigger:\n  - platform: state\n    entity_id: binary_sensor.gym_motion\n    to: 'on'\naction:\n  - service: light.turn_on\n    target:\n      entity_id: light.gym_main_lights",
-            "explanation": "This is a TEST response to verify service communication is working.",
-            "entities_used": call.data.get('entities', []),
-            "debug": "Service is working! This is a hardcoded test response."
-        }
-        _LOGGER.warning("Returning test response with success=True")
-        return test_response
-        
-        # This code is unreachable due to early return above, removing it
-        # The test response is always returned for debugging
-        
-        # Test: Return a simple response immediately to check if the service response works
-        if call.data.get("test_mode"):
-            _LOGGER.info("Test mode - returning test response")
-            return {"success": True, "message": "Test response working"}
         
         try:
             config_generator = hass.data[DOMAIN].get("config_generator")
@@ -175,7 +152,7 @@ async def _async_register_services(hass: HomeAssistant) -> None:
             context = call.data.get("context", {})
             include_entities = call.data.get("entities", [])
             
-            _LOGGER.info("Calling config generator with prompt: %s", prompt)
+            _LOGGER.info("Generating %s for prompt: %s", config_type, prompt[:50] + "..." if len(prompt) > 50 else prompt)
             
             result = await config_generator.generate_config(
                 prompt=prompt,
@@ -212,7 +189,7 @@ async def _async_register_services(hass: HomeAssistant) -> None:
                     "error": result.warnings[0] if result.warnings else "Configuration generation failed",
                 }
             
-            _LOGGER.info("Returning response: %s", response_data.get("success", "unknown"))
+            _LOGGER.info("Returning %s response", "success" if response_data["success"] else "error")
             return response_data
             
         except Exception as err:
